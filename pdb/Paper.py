@@ -9,8 +9,8 @@ def filter(wd):
 
 	pdbs = os.listdir(wd) #Lists the files you want to use (PDBs)
 
-	os.system("mkdir /home/douglas_lima/pdb/unzipped/RMN_rmk/")
-	os.system("mkdir /home/douglas_lima/pdb/unzipped/Carbohydrates_rmk/")
+	os.system("mkdir /home/douglas/pdb/unzipped/RMN_rmk/")
+	os.system("mkdir /home/douglas/pdb/unzipped/Carbohydrates_rmk/")
 
 	os.chdir(wd)#Changes to that directory
 
@@ -30,7 +30,7 @@ def filter(wd):
 	output = open("OWAB.txt","w")
 
 
-	content = open("/home/douglas_lima/pdb/unzipped/Sugar_in_pdbs_rmk.txt", "w")
+	content = open("/home/douglas/pdb/unzipped/Sugar_in_pdbs_rmk.txt", "w")
 
 
 
@@ -72,7 +72,7 @@ def filter(wd):
 					if "RESOLUTION" in x[b]:
 						if x[3] == "NOT" or x[3] == "NULL":
 							print(name)
-							os.system("mv " + name + " /home/douglas_lima/pdb/unzipped/RMN_rmk/")
+							os.system("mv " + name + " /home/douglas/pdb/unzipped/RMN_rmk/")
 						else:
 							if float(x[3]) <= 2.0 and b_factors[name] <= 60.0:
 								res.append(x[3])
@@ -126,7 +126,7 @@ def filter(wd):
 
 
 		if len(sugars) != 0:
-			os.chdir("/home/douglas_lima/pdb/unzipped/Carbohydrates_rmk/")
+			os.chdir("/home/douglas/pdb/unzipped/Carbohydrates_rmk/")
 			file = open(name + ".carbo" + ".pdb", "w")
 
 			for i in lines:
@@ -145,7 +145,7 @@ def filter(wd):
 
 
 
-	os.chdir("/home/douglas_lima/pdb/unzipped/")
+	os.chdir("/home/douglas/pdb/unzipped/")
 
 	file = open("Resolutions_rmk.txt", "w")
 	for i in range (len(save_resolution)):
@@ -191,7 +191,7 @@ def Ring_sep(name):
 
 	lines = []
 
-	os.system("mkdir /home/douglas_lima/pdb/unzipped/Rings_rmk/")
+	os.system("mkdir /home/douglas/pdb/unzipped/Rings_rmk/")
 
 	for line in arq:
 		if line[0:4] == "ATOM" or line[0:6] == "HETATM":
@@ -223,7 +223,7 @@ def Ring_sep(name):
 		for y in range (len(res[x])):
 			d.write("{:6s}{:5d} {:^4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}          {:>2s}{:2s}\n".format(res[x][y][0:6], int(res[x][y][6:11]), res[x][y][12:16], res[x][y][16:17], res[x][y][17:20], res[x][y][21:22], int(res[x][y][22:26]), res[x][y][26:27], float(res[x][y][30:38]), float(res[x][y][38:46]), float(res[x][y][46:54]), float(res[x][y][54:60]), float(res[x][y][60:66]), res[x][y][76:78], res[x][y][78:80]))
 		d.close()
-		os.system("mv " + name[:7] + ".Ring" + str(tag) + ".pdb /home/douglas_lima/pdb/unzipped/Rings_rmk/")
+		os.system("mv " + name[:7] + ".Ring" + str(tag) + ".pdb /home/douglas/pdb/unzipped/Rings_rmk/")
 
 			
 		
@@ -398,19 +398,19 @@ def calculate_pucker(pdbinput):
 #################################################################################################
 
 def Separate():
-	pdbs = os.listdir("/home/douglas_lima/pdb/unzipped/Carbohydrates/remake/")
+	pdbs = os.listdir("/home/douglas/pdb/unzipped/Carbohydrates/remake/")
 
-	os.chdir("/home/douglas_lima/pdb/unzipped/")
+	os.chdir("/home/douglas/pdb/unzipped/")
 
 	os.system("mkdir Separated_rmk/")
 
 	o_atoms = ["O1A", "O2", "O3", "O4", "O5", "O8", "O9", "O10", "O7", "O1B"]
 
-	os.chdir("/home/douglas_lima/pdb/unzipped/")
+	os.chdir("/home/douglas/pdb/unzipped/")
 
 	report = open("Sugars_Links_rmk.txt", "w")
 
-	os.chdir("/home/douglas_lima/pdb/unzipped/Carbohydrates/remake/")
+	os.chdir("/home/douglas/pdb/unzipped/Carbohydrates/remake/")
 
 	for i in pdbs:
 		print(i)
@@ -418,11 +418,11 @@ def Separate():
 		linked = {}
 		keys = []
 		disordered = defaultdict(list)
-		io = PDBIO()
-		parser = PDBParser()
+		io = PDBIO() #Bio python PDBIO
+		parser = PDBParser() #Bio python PDBParser
 		structure = parser.get_structure(i,i)
-		atom_list = Selection.unfold_entities(structure, 'A') # A for atoms
-		ns = NeighborSearch(atom_list)
+		atom_list = Selection.unfold_entities(structure, 'A') # A for atoms #Bio python Selection
+		ns = NeighborSearch(atom_list) #Bio python NeighborSearch
 		for x in atom_list:
 			for y in o_atoms:
 				if y in x.get_name():
@@ -518,21 +518,21 @@ def Separate():
 
 							if ("'" in j.get_name() and "'" not in x.get_name()) or  ("'" in x.get_name() and "'" not in j.get_name()):
 								io.set_structure(j.get_parent())
-								os.chdir("/home/douglas_lima/pdb/unzipped/Separated_rmk/")
+								os.chdir("/home/douglas/pdb/unzipped/Separated_rmk/")
 								io.save(i[:7] + "_2_" + str(j.get_parent().get_parent().get_id()) + ".pdb")
 								connected.append(j.get_parent())
 								connected.append(x.get_parent())
-								os.chdir("/home/douglas_lima/pdb/unzipped/Carbohydrates/remake/")
+								os.chdir("/home/douglas/pdb/unzipped/Carbohydrates/remake/")
 							
 
 		for p in atom_list:
 			if p.get_parent() not in connected:
-				os.chdir("/home/douglas_lima/pdb/unzipped/Separated_rmk/")
+				os.chdir("/home/douglas/pdb/unzipped/Separated_rmk/")
 				if not os.path.exists(i[:7] + "_1_" + str(p.get_parent().get_id()[1]) + str(p.get_parent().get_parent().get_id()) + ".pdb"):
 					io.set_structure(p.get_parent())
 					io.save(i[:7] + "_1_" + str(p.get_parent().get_id()[1]) + str(p.get_parent().get_parent().get_id()) + ".pdb")
 					report.write(i[:7] + "	" + str(1) + "	" + str(p.get_parent().get_resname()) + "\n")
-		os.chdir("/home/douglas_lima/pdb/unzipped/Carbohydrates/remake/")
+		os.chdir("/home/douglas/pdb/unzipped/Carbohydrates/remake/")
 
 
 
@@ -566,7 +566,7 @@ def Separate():
 			for n in arq.readlines():
 				lines.append(n)
 
-			os.chdir("/home/douglas_lima/pdb/unzipped/Separated_rmk/")
+			os.chdir("/home/douglas/pdb/unzipped/Separated_rmk/")
 
 			for p in ids:
 				if isinstance(ids[p][-1], int):
@@ -580,7 +580,7 @@ def Separate():
 						file.write(l)
 				file.close()
 
-			os.chdir("/home/douglas_lima/pdb/unzipped/Carbohydrates/remake/")
+			os.chdir("/home/douglas/pdb/unzipped/Carbohydrates/remake/")
 
 			arq.close()
 
@@ -589,7 +589,7 @@ def Separate():
 
 ##########################################################################################################
 
-wd = "/home/douglas_lima/pdb/unzipped/" #Location of your PDB files to be analysed
+wd = "/home/douglas/pdb/unzipped/" #Location of your PDB files to be analysed
 
 filter(wd)
 
@@ -627,34 +627,34 @@ distribution_OWAB.close()
 '''
 Separate()
 
-pdbs = os.listdir("/home/douglas_lima/pdb/unzipped/Separated_rmk/")
+pdbs = os.listdir("/home/douglas/pdb/unzipped/Separated_rmk/")
 
-os.chdir("/home/douglas_lima/pdb/unzipped/Separated_rmk/")
+os.chdir("/home/douglas/pdb/unzipped/Separated_rmk/")
 
 for i in pdbs:
 	Ring_sep(i)
 
-pdbs = os.listdir("/home/douglas_lima/pdb/unzipped/Rings_rmk/")
+pdbs = os.listdir("/home/douglas/pdb/unzipped/Rings_rmk/")
 
-os.chdir("/home/douglas_lima/pdb/unzipped/Rings_rmk/")
+os.chdir("/home/douglas/pdb/unzipped/Rings_rmk/")
 
-os.system("mkdir /home/douglas_lima/pdb/unzipped/Not_Rings_rmk")
-os.system("mkdir /home/douglas_lima/pdb/unzipped/Rings2_rmk")
-os.system("mkdir /home/douglas_lima/pdb/unzipped/Puckering_Files_rmk")
+os.system("mkdir /home/douglas/pdb/unzipped/Not_Rings_rmk")
+os.system("mkdir /home/douglas/pdb/unzipped/Rings2_rmk")
+os.system("mkdir /home/douglas/pdb/unzipped/Puckering_Files_rmk")
 
 output1 = "phi_rmk.txt"
 output2 = "theta_rmk.txt"
 output3 = "bigQ_rmk.txt"
 
-out1 = open("/home/douglas_lima/pdb/unzipped/Puckering_Files_rmk/" + output1, 'w')
+out1 = open("/home/douglas/pdb/unzipped/Puckering_Files_rmk/" + output1, 'w')
 out1.write("""# This file was created by Glados!\n@    title "Puckering"\n@    xaxis  label "Time (ns)"\n@    yaxis  label "Phi angle"\n@TYPE xy\n""")	
 out1.close()
 
-out2 = open("/home/douglas_lima/pdb/unzipped/Puckering_Files_rmk/" + output2, 'w')
+out2 = open("/home/douglas/pdb/unzipped/Puckering_Files_rmk/" + output2, 'w')
 out2.write("""# This file was created by Glados!\n@    title "Puckering"\n@    xaxis  label "Time (ns)"\n@    yaxis  label "Theta angle"\n@TYPE xy\n""")
 out2.close()
 
-out3 = open("/home/douglas_lima/pdb/unzipped/Puckering_Files_rmk/" + output3, 'w')
+out3 = open("/home/douglas/pdb/unzipped/Puckering_Files_rmk/" + output3, 'w')
 out3.write("""# This file was created by Glados!\n@    title "Puckering"\n@    xaxis  label "Time (ns)"\n@    yaxis  label "Big Q"\n@TYPE xy\n""")
 out3.close()
 
@@ -671,9 +671,9 @@ for name in pdbs:
 	try:
 		string1, string2, string3 = calculate_pucker(name)
 
-		out1 = open("/home/douglas_lima/pdb/unzipped/" + output1, 'a')
-		out2 = open("/home/douglas_lima/pdb/unzipped/" + output2, 'a')
-		out3 = open("/home/douglas_lima/pdb/unzipped/" + output3, 'a')
+		out1 = open("/home/douglas/pdb/unzipped/" + output1, 'a')
+		out2 = open("/home/douglas/pdb/unzipped/" + output2, 'a')
+		out3 = open("/home/douglas/pdb/unzipped/" + output3, 'a')
 
 		out1.write("." + name[3:-4] + "	" + tag + "	" + string1 + "\n")
 		out2.write("." + name[3:-4] + "	" + tag + "	" + string2 + "\n")
@@ -684,12 +684,12 @@ for name in pdbs:
 		out3.close()
 
 	except IndexError:
-		os.system("mv " + name + " /home/douglas_lima/pdb/unzipped/Not_Rings_rmk/")
+		os.system("mv " + name + " /home/douglas/pdb/unzipped/Not_Rings_rmk/")
 
 
 
 
-	os.system("mv " + name + " /home/douglas_lima/pdb/unzipped/Rings2_rmk/")
-	os.system("mv  *ord* /home/douglas_lima/pdb/unzipped/Puckering_Files_rmk/")
+	os.system("mv " + name + " /home/douglas/pdb/unzipped/Rings2_rmk/")
+	os.system("mv  *ord* /home/douglas/pdb/unzipped/Puckering_Files_rmk/")
 '''
 #################################################################################################################
