@@ -317,7 +317,8 @@ def calculate_pucker(pdbinput):
 
 	datname = mkpdbdat(pdbinput)
 
-	inputfile = file(datname, 'r')
+#	inputfile = file(datname, 'r')
+	inputfile = open(datname, 'r')
 
 	atoms=numpy.zeros((6,3),dtype='float64')
 
