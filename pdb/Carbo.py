@@ -1,5 +1,4 @@
 import os
-import struct
 from Bio.PDB import *
 import warnings
 from Bio.PDB.PDBExceptions import PDBConstructionWarning #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
