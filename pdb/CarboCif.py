@@ -6,14 +6,6 @@ from collections import defaultdict
 
 warnings.simplefilter('ignore', PDBConstructionWarning)
 
-import os
-from Bio.PDB import *
-import warnings
-from Bio.PDB.PDBExceptions import PDBConstructionWarning #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
-from collections import defaultdict
-
-warnings.simplefilter('ignore', PDBConstructionWarning)
-
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem resoluções maiores que a resolução máxima selecionada
 def filter_maxResolution(fileNames, maxResolution):
 
@@ -26,6 +18,7 @@ def filter_maxResolution(fileNames, maxResolution):
         
         if structure.header.get("resolution") <= maxResolution: # Testa se a resolução da estrutura é menor ou igual a resolução desejada (atributo da função)
             filteredFileNames.append(fileName)
+        file.close()
     
     return filteredFileNames
 
@@ -33,7 +26,7 @@ def filter_maxResolution(fileNames, maxResolution):
 def filter_maxOWAB(fileNames, maxOWAB):
 
     filteredFileNames = []
-    pdbParser = MMCIFParser()
+    pdbParser = FastMMCIFParser()
 
     for fileName in fileNames:
         file = open(fileName, 'r')
@@ -45,11 +38,12 @@ def filter_maxOWAB(fileNames, maxOWAB):
             occupancy_x_bfactor += (atom.get_occupancy() * atom.get_bfactor())
         
         owab = occupancy_x_bfactor/len(atomList) # OWAB = média de ocupância * b_factor dos átomos da estrutura
-        print(fileName)
-        print(owab)
+
         if owab <= maxOWAB:
             filteredFileNames.append(fileName)
-    
+
+        file.close()
+
     return filteredFileNames
 
 
@@ -60,3 +54,4 @@ fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
 print(fileNames)
 print(filter_maxResolution(fileNames, 3))
+#print(filter_maxOWAB(fileNames, 60))
