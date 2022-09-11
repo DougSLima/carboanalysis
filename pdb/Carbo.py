@@ -47,3 +47,6 @@ def filter_maxOWAB(fileNames, maxOWAB):
 
 os.chdir("/home/douglas_lima/pdb/testes")
 fileNames = os.listdir("/home/douglas_lima/pdb/testes")
+
+print(fileNames)
+print(filter_maxResolution(fileNames, 3))
