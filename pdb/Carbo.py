@@ -2,6 +2,7 @@ import os
 from Bio.PDB import *
 import warnings
 from Bio.PDB.PDBExceptions import PDBConstructionWarning #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
+from collections import defaultdict
 
 warnings.simplefilter('ignore', PDBConstructionWarning)
 
@@ -46,8 +47,3 @@ def filter_maxOWAB(fileNames, maxOWAB):
 
 os.chdir("/home/douglas_lima/pdb/testes")
 fileNames = os.listdir("/home/douglas_lima/pdb/testes")
-
-
-
-
-
