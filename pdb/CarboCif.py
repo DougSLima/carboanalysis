@@ -15,10 +15,10 @@ def filter_maxResolution(fileNames, maxResolution):
     for fileName in fileNames:
         file = open(fileName, 'r')
         structure = pdbParser.get_structure(file.name, file)
+        file.close()
         
         if structure.header.get("resolution") <= maxResolution: # Testa se a resolução da estrutura é menor ou igual a resolução desejada (atributo da função)
             filteredFileNames.append(fileName)
-        file.close()
     
     return filteredFileNames
 
@@ -31,6 +31,7 @@ def filter_maxOWAB(fileNames, maxOWAB):
     for fileName in fileNames:
         file = open(fileName, 'r')
         structure = pdbParser.get_structure(file.name, file)
+        file.close()
         atomList = Selection.unfold_entities(structure, 'A')
         occupancy_x_bfactor = 0
 
@@ -42,16 +43,12 @@ def filter_maxOWAB(fileNames, maxOWAB):
         if owab <= maxOWAB:
             filteredFileNames.append(fileName)
 
-        file.close()
-
     return filteredFileNames
-
-
 
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
 print(fileNames)
-print(filter_maxResolution(fileNames, 3))
-#print(filter_maxOWAB(fileNames, 60))
+#print(filter_maxResolution(fileNames, 3))
+print(filter_maxOWAB(fileNames, 60))
