@@ -1,5 +1,3 @@
-from ctypes import sizeof
-from itertools import count
 import os
 import sys
 import warnings
@@ -8,7 +6,6 @@ import pandas as pd
 from Bio.PDB import *
 from Bio.PDB.MMCIF2Dict import *
 from Bio.PDB.PDBExceptions import PDBConstructionWarning #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
-from collections import defaultdict
 
 warnings.simplefilter('ignore', PDBConstructionWarning)
 
@@ -32,7 +29,7 @@ residueList = Selection.unfold_entities(structure, 'R')
 
 #/////////////////////////////////////////////////////////////////////////////
 #
-mmcif_dict = MMCIF2Dict(file.name)
+mmcif_dict = MMCIF2Dict("/home/douglas_lima/pdb/testesCif/4of3.cif")
 
 entity_ids = mmcif_dict["_entity.id"]
 entity_types = mmcif_dict["_entity.type"]
@@ -70,18 +67,59 @@ carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv
 
 #print('SUM' in carbo_dict['carbo_id'].values)
 
-entity_poly_seq_mon_ids = mmcif_dict["_entity_poly_seq.mon_id"]
-print(entity_poly_seq_mon_ids)
-print(len(entity_poly_seq_mon_ids))
-print('GLY' in entity_poly_seq_mon_ids)
+#/////////////////////////////////////////////////////////////////////////////
+#
+# Verifica que o camp _chem_comp.id representa todos os componentes da estrutura
+#
+# entity_poly_seq_mon_ids = mmcif_dict["_entity_poly_seq.mon_id"]
+# #print(entity_poly_seq_mon_ids)
+# print(len(entity_poly_seq_mon_ids))
+# print('GLY' in entity_poly_seq_mon_ids)
 
-chem_comp_ids = mmcif_dict["_chem_comp.id"]
+# chem_comp_ids = mmcif_dict["_chem_comp.id"]
+# print(chem_comp_ids)
+# i = 0
+# for x in entity_poly_seq_mon_ids:
+#     if(x in chem_comp_ids):
+#         i = i + 1
+# print(i)
 
+#/////////////////////////////////////////////////////////////////////////////
+#
+# Teste da função set pra intersecção de duas listas
+#
+# a = [1, 2, 3, 4]
+# b = [7, 6, 5, 4]
+# a_set = set(a)
+# b_set = set(b)
+# print(set(a) & set(b))
+# print(a_set & b_set)
 
+# if(set(a) & set(b)):
+#     print("Vrau")
+#/////////////////////////////////////////////////////////////////////////////
 
+#/////////////////////////////////////////////////////////////////////////////
+#
+# Criação da função pra filtrar estruturas com carboidratos
+#
+# def filter_containCarbo(fileNames):
+    
+#     filteredFileNames = []
+#     carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # Release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
 
+#     for fileName in fileNames:
+        
+#         mmcif_dict = MMCIF2Dict(fileName)
+#         chem_components = mmcif_dict["_chem_comp.id"]
 
+#         if(set(carbo_dict["carbo_id"].values) & set(chem_components)):
+            
+#             filteredFileNames.append(fileName)
 
+#     return filteredFileNames
 
-
-
+# fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
+# print(filter_containCarbo(fileNames))
+#
+#/////////////////////////////////////////////////////////////////////////////

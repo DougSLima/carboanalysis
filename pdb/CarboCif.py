@@ -1,8 +1,9 @@
 import os
-from Bio.PDB import *
+import pandas as pd
 import warnings
+from Bio.PDB import *
+from Bio.PDB.MMCIF2Dict import *
 from Bio.PDB.PDBExceptions import PDBConstructionWarning #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
-from collections import defaultdict
 
 warnings.simplefilter('ignore', PDBConstructionWarning)
 
@@ -45,10 +46,27 @@ def filter_maxOWAB(fileNames, maxOWAB):
 
     return filteredFileNames
 
+# Remove da lista recebida todos os nomes de arquivos cujas estruturas não apresentam carboidratos
+def filter_containCarbo(fileNames):
+    
+    filteredFileNames = []
+    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # Release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
+
+    for fileName in fileNames:
+        
+        mmcif_dict = MMCIF2Dict(fileName)
+        chem_components = mmcif_dict["_chem_comp.id"]
+
+        if(set(carbo_dict["carbo_id"].values) & set(chem_components)):
+            
+            filteredFileNames.append(fileName)
+
+    return filteredFileNames
+
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
 print(fileNames)
 #print(filter_maxResolution(fileNames, 3))
-print(filter_maxOWAB(fileNames, 60))
+print(filter_containCarbo(fileNames))
