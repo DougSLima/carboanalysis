@@ -16,6 +16,7 @@ file = open("/home/douglas_lima/pdb/testesCif/4of3.cif")
 pdbParser = MMCIFParser()
 
 structure = pdbParser.get_structure(file.name, file)
+print(structure.header)
 residueList = Selection.unfold_entities(structure, 'R')
 
 #/////////////////////////////////////////////////////////////////////////////

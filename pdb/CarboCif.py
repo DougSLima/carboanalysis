@@ -46,6 +46,38 @@ def filter_maxOWAB(fileNames, maxOWAB):
 
     return filteredFileNames
 
+# Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem métodos de estrutura diferentes do método escolhido
+def filter_structureMethod(fileNames, structure_method):
+    
+    # Allowed values for structure_method:
+    #
+    # 'X-RAY DIFFRACTION'
+    # 'ELECTRON CRYSTALLOGRAPHY'	
+    # 'ELECTRON MICROSCOPY'	
+    # 'EPR'	
+    # 'FIBER DIFFRACTION'	
+    # 'FLUORESCENCE TRANSFER'	
+    # 'INFRARED SPECTROSCOPY'	
+    # 'NEUTRON DIFFRACTION'	
+    # 'POWDER DIFFRACTION'	
+    # 'SOLID-STATE NMR'	
+    # 'SOLUTION NMR'	
+    # 'SOLUTION SCATTERING'
+    # 'THEORETICAL MODEL'
+
+    filteredFileNames = [] # lista de filtrados
+    pdbParser = MMCIFParser()
+
+    for fileName in fileNames:
+        file = open(fileName, 'r')
+        structure = pdbParser.get_structure(file.name, file)
+        file.close()
+        
+        if structure.header.get("structure_method") == structure_method:
+            filteredFileNames.append(fileName)
+    
+    return filteredFileNames
+
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas não apresentam carboidratos
 def filter_containCarbo(fileNames):
     
@@ -63,10 +95,9 @@ def filter_containCarbo(fileNames):
 
     return filteredFileNames
 
-
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
 print(fileNames)
 #print(filter_maxResolution(fileNames, 3))
-print(filter_containCarbo(fileNames))
+print(filter_structureMethod(fileNames, 'X-RAY DIFFRACTION'))
