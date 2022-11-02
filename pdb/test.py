@@ -16,25 +16,27 @@ file = open("/home/douglas_lima/pdb/testesCif/4of3.cif")
 pdbParser = MMCIFParser()
 
 structure = pdbParser.get_structure(file.name, file)
-print(structure.header)
 residueList = Selection.unfold_entities(structure, 'R')
 
-#/////////////////////////////////////////////////////////////////////////////
-#
-# Pega os resíduos com hetero flag difernte de " "(Amino acidos) e "W" (Moléculas de água)
-#
-# for residue in residueList:
-#     if residue.get_id()[0] != " " and residue.get_id()[0] != "W":
-#         print(residue)
-#/////////////////////////////////////////////////////////////////////////////
 
-#/////////////////////////////////////////////////////////////////////////////
-#
 mmcif_dict = MMCIF2Dict("/home/douglas_lima/pdb/testesCif/4of3.cif")
 
+#oligo
 entity_ids = mmcif_dict["_entity.id"]
 entity_types = mmcif_dict["_entity.type"]
 entity_descriptions = mmcif_dict["_entity.pdbx_description"]
+entity_number_of_molecules = mmcif_dict["_entity.pdbx_number_of_molecules"]
+entity_formula_weight = mmcif_dict["_entity.formula_weight"]
+
+branch_entity_id = mmcif_dict["_pdbx_entity_branch.entity_id"]
+branch_entity_type = mmcif_dict["_pdbx_entity_branch.type"]
+
+#/////////////////////////////////////////////////////////////////////////////
+#
+# Se o branched retornar algo q nao for oligossacaridio da pra fazer assim:
+#
+#  dic = dict(zip(branch_entity_id, branch_entity_type))
+# print([k for k, v in dic.items() if v == 'oligosaccharide'])
 
 #print(mmcif_dict.keys())
 #
@@ -46,9 +48,18 @@ entity_descriptions = mmcif_dict["_entity.pdbx_description"]
 #creates a dataframe
 #Pandas package
 #
-residue_dict = {"ID": entity_ids, "type": entity_types, "description": entity_descriptions, "Entry ID": "4OF3"}
+residue_dict = {"ID": entity_ids, "type": entity_types, "description": entity_descriptions,"mol_num": entity_number_of_molecules, "formula_weight": entity_formula_weight, "entry ID": "4OF3"}
 df = pd.DataFrame(data = residue_dict)
-#print(df)
+df = df[df.type == "branched"]
+
+
+branch_list_entity_id = mmcif_dict["_pdbx_entity_branch_list.entity_id"]
+branch_list_comp_id = mmcif_dict["_pdbx_entity_branch_list.comp_id"]
+branch_list_comp_num = mmcif_dict["_pdbx_entity_branch_list.num"]
+
+monossacaride_dict = {"comp ID": branch_list_comp_id, "entry ID": "4OF3", "oligossacaride": True, "entity_id": branch_list_entity_id, "comp_num": branch_list_comp_num, "mol_num": None}
+monossacaride_df = pd.DataFrame(data = monossacaride_dict)
+print(monossacaride_df)
 
 
 #/////////////////////////////////////////////////////////////////////////////
