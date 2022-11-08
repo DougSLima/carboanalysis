@@ -82,6 +82,7 @@ def filter_structureMethod(fileNames, structure_method):
 def filter_containCarbo(fileNames):
     
     filteredFileNames = []
+    filteredEntries = []
     carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # Release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
 
     for fileName in fileNames:
@@ -92,7 +93,14 @@ def filter_containCarbo(fileNames):
         if(set(carbo_dict["carbo_id"].values) & set(chem_components)):
             
             filteredFileNames.append(fileName)
+            filteredEntries.append(mmcif_dict["_entry.id"][0])
 
+    #Escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
+    with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
+        for entry in filteredEntries:
+            #escreve cada entry_id em uma nova linha
+            file.write("%s\n" % entry)
+            
     return filteredFileNames
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
