@@ -149,6 +149,7 @@ def separate(fileNames):
     oligosaccharide_df = pd.DataFrame()
     olig_monosaccharide_df = pd.DataFrame()
     monosaccharide_df = pd.DataFrame()
+    olig_and_non_olig_monosaccharides = pd.DataFrame()
     monosaccharides = pd.DataFrame()
 
     for fileName in fileNames:
@@ -211,12 +212,30 @@ def separate(fileNames):
             monosaccharide_df = monosaccharide_df[monosaccharide_df.comp_id.isin(carbo_dict["carbo_id"].values)]
            
         #junta os dataframes dos monossacarídeos
-        monosaccharides = pd.concat([monosaccharides, olig_monosaccharide_df, monosaccharide_df], ignore_index=True)
+        olig_and_non_olig_monosaccharides = pd.concat([olig_monosaccharide_df, monosaccharide_df], ignore_index=True)
         
-    #mudar pra criar csv
-    print(oligosaccharide_df)
-    print(monosaccharides)
+    #Chem comp identifier
+        identifier_comp_id = mmcif_dict["_pdbx_chem_comp_identifier.comp_id"]
+        identifier_type = mmcif_dict["_pdbx_chem_comp_identifier.type"]
+        identifier_identifier = mmcif_dict["_pdbx_chem_comp_identifier.identifier"]
 
+        identifier_dict = {"comp_id": identifier_comp_id, "type": identifier_type, "identifier": identifier_identifier}
+        identifier_df = pd.DataFrame(data=identifier_dict)
+
+        commom_names = []
+        iupac_symbols = []
+
+        for comp_id in olig_and_non_olig_monosaccharides.comp_id:
+            commom_names.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'COMMON NAME')]["identifier"].values[0]) 
+            iupac_symbols.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'IUPAC CARBOHYDRATE SYMBOL')]["identifier"].values[0]) 
+    
+        olig_and_non_olig_monosaccharides["commom_name"] = commom_names
+        olig_and_non_olig_monosaccharides["iupac_symbol"] = iupac_symbols      
+        
+        monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
+    
+    #mudar pra criar csv
+    print(monosaccharides)
 
 #fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 fileNames = ["/home/douglas_lima/pdb/testesCif/1v6u.cif", "/home/douglas_lima/pdb/testesCif/2wmg.cif", "/home/douglas_lima/pdb/testesCif/4of3.cif", "/home/douglas_lima/pdb/testesCif/5ebw.cif"]
