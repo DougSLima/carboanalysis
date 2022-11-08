@@ -117,10 +117,39 @@ monosaccharide["iupac_symbol"] = iupac_symbols
 
 #monosaccharide.to_csv(path_or_buf="/home/douglas_lima/pdb/monosaccharide.csv")
 
+def filter_containCarbo(fileNames):
+    
+    filteredFileNames = []
+    filteredEntries = []
+    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # Release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
+
+    for fileName in fileNames:
+        
+        mmcif_dict = MMCIF2Dict(fileName)
+        chem_components = mmcif_dict["_chem_comp.id"]
+
+        if(set(carbo_dict["carbo_id"].values) & set(chem_components)):
+            
+            filteredFileNames.append(fileName)
+            filteredEntries.append(mmcif_dict["_entry.id"][0])
+
+    #Escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
+    with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
+        for entry in filteredEntries:
+            #escreve cada entry_id em uma nova linha
+            file.write("%s\n" % entry)
+            
+    return filteredFileNames
+
+#Separa os monossacarídeos e oligossacarídeos em dois pd.DataFrames e gera os respectivos arquivos .csv
 def separate(fileNames):
     
+    fileNames = filter_containCarbo(fileNames)
+
     oligosaccharide_df = pd.DataFrame()
+    olig_monosaccharide_df = pd.DataFrame()
     monosaccharide_df = pd.DataFrame()
+    monosaccharides = pd.DataFrame()
 
     for fileName in fileNames:
 
@@ -148,8 +177,7 @@ def separate(fileNames):
 
             entity_df = entity_df[entity_df.id.isin([k for k, v in olig_dic.items() if v == 'oligosaccharide'])]
             
-            #mudar pra escrever o csv
-            print(entity_df)
+            oligosaccharide_df = pd.concat([oligosaccharide_df, entity_df], ignore_index=True)
 
         #monosaccharide from oligosaccharide DataFrame
         if "_pdbx_entity_branch_list.entity_id" in mmcif_dict:
@@ -183,14 +211,15 @@ def separate(fileNames):
             monosaccharide_df = monosaccharide_df[monosaccharide_df.comp_id.isin(carbo_dict["carbo_id"].values)]
            
         #junta os dataframes dos monossacarídeos
-        monosaccharides = pd.concat([olig_monosaccharide_df, monosaccharide_df], ignore_index=True)
+        monosaccharides = pd.concat([monosaccharides, olig_monosaccharide_df, monosaccharide_df], ignore_index=True)
         
-        #mudar pra criar csv
-        print(monosaccharides)
+    #mudar pra criar csv
+    print(oligosaccharide_df)
+    print(monosaccharides)
 
 
 #fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
-fileNames = ["/home/douglas_lima/pdb/testesCif/1v6u.cif"]
+fileNames = ["/home/douglas_lima/pdb/testesCif/1v6u.cif", "/home/douglas_lima/pdb/testesCif/2wmg.cif", "/home/douglas_lima/pdb/testesCif/4of3.cif", "/home/douglas_lima/pdb/testesCif/5ebw.cif"]
 separate(fileNames)
 
 #print(monosaccharide_df_2)
