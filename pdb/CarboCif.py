@@ -100,7 +100,8 @@ def filter_containCarbo(fileNames):
         for entry in filteredEntries:
             #escreve cada entry_id em uma nova linha
             file.write("%s\n" % entry)
-            
+        print('Done: carbo_entrys.txt')    
+        
     return filteredFileNames
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
