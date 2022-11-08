@@ -100,4 +100,4 @@ fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
 print(fileNames)
 #print(filter_maxResolution(fileNames, 3))
-print(filter_structureMethod(fileNames, 'X-RAY DIFFRACTION'))
+print(filter_containCarbo(fileNames))

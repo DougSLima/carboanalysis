@@ -12,6 +12,8 @@ warnings.simplefilter('ignore', PDBConstructionWarning)
 os.chdir("/home/douglas_lima/pdb/testesCif")
 file = open("/home/douglas_lima/pdb/testesCif/2wmg.cif")
 file = open("/home/douglas_lima/pdb/testesCif/4of3.cif")
+file = open("/home/douglas_lima/pdb/testesCif/1v6u.cif")
+#file = open("/home/douglas_lima/pdb/testesCif/5ebw.cif")
 
 pdbParser = MMCIFParser()
 
@@ -19,17 +21,18 @@ structure = pdbParser.get_structure(file.name, file)
 residueList = Selection.unfold_entities(structure, 'R')
 
 
-mmcif_dict = MMCIF2Dict("/home/douglas_lima/pdb/testesCif/4of3.cif")
+mmcif_dict = MMCIF2Dict(file.name)
 
-#oligo
+#entity
 entity_ids = mmcif_dict["_entity.id"]
 entity_types = mmcif_dict["_entity.type"]
 entity_descriptions = mmcif_dict["_entity.pdbx_description"]
 entity_number_of_molecules = mmcif_dict["_entity.pdbx_number_of_molecules"]
 entity_formula_weight = mmcif_dict["_entity.formula_weight"]
 
-branch_entity_id = mmcif_dict["_pdbx_entity_branch.entity_id"]
-branch_entity_type = mmcif_dict["_pdbx_entity_branch.type"]
+if "_pdbx_entity_branch.entity_id" in mmcif_dict:
+    branch_entity_id = mmcif_dict["_pdbx_entity_branch.entity_id"]
+    branch_entity_type = mmcif_dict["_pdbx_entity_branch.type"]
 
 #/////////////////////////////////////////////////////////////////////////////
 #
@@ -48,20 +51,72 @@ branch_entity_type = mmcif_dict["_pdbx_entity_branch.type"]
 #creates a dataframe
 #Pandas package
 #
-residue_dict = {"ID": entity_ids, "type": entity_types, "description": entity_descriptions,"mol_num": entity_number_of_molecules, "formula_weight": entity_formula_weight, "entry ID": "4OF3"}
+residue_dict = {"ID": entity_ids, "type": entity_types, "description": entity_descriptions,"mol_num": entity_number_of_molecules, "formula_weight": entity_formula_weight, "entry ID": mmcif_dict["_entry.id"][0]}
 df = pd.DataFrame(data = residue_dict)
-df = df[df.type == "branched"]
+#print(df)
+df_branched = df[df.type == "branched"]
+#print(df_branched)
 
+if "_pdbx_entity_branch_list.entity_id" in mmcif_dict:
+    branch_list_entity_id = mmcif_dict["_pdbx_entity_branch_list.entity_id"]
+    branch_list_comp_id = mmcif_dict["_pdbx_entity_branch_list.comp_id"]
+    branch_list_comp_num = mmcif_dict["_pdbx_entity_branch_list.num"]
 
-branch_list_entity_id = mmcif_dict["_pdbx_entity_branch_list.entity_id"]
-branch_list_comp_id = mmcif_dict["_pdbx_entity_branch_list.comp_id"]
-branch_list_comp_num = mmcif_dict["_pdbx_entity_branch_list.num"]
+    mol_nums = []
+    for entity_id in branch_list_entity_id:
+        mol_nums.append(entity_number_of_molecules[int(entity_id) - 1]) # transforma o vetor de ids pra inteiro e retira 1 pq o id de entidades começa em 1 e o indice do vetor começa em 0
 
-monossacaride_dict = {"comp ID": branch_list_comp_id, "entry ID": "4OF3", "oligossacaride": True, "entity_id": branch_list_entity_id, "comp_num": branch_list_comp_num, "mol_num": None}
-monossacaride_df = pd.DataFrame(data = monossacaride_dict)
-print(monossacaride_df)
+    monossacaride_dict = {"comp_id": branch_list_comp_id, "entry_id": mmcif_dict["_entry.id"][0], "oligossacaride": True, "entity_id": branch_list_entity_id, "comp_num": branch_list_comp_num, "mol_num": mol_nums}
+    monossacaride_df = pd.DataFrame(data = monossacaride_dict)
+    #monossacaride_df = pd.DataFrame()
+    #print(monossacaride_df)
 
+if "_pdbx_entity_nonpoly.entity_id" in mmcif_dict:
+    nonpoly_entity_id = mmcif_dict["_pdbx_entity_nonpoly.entity_id"]
+    nonpoly_entity_comp_id = mmcif_dict["_pdbx_entity_nonpoly.comp_id"]
 
+    mol_nums = []
+    for entity_id in nonpoly_entity_id:
+        mol_nums.append(entity_number_of_molecules[int(entity_id) - 1]) # transforma o vetor de ids pra inteiro e retira 1 pq o id de entidades começa em 1 e o indice do vetor começa em 0
+
+    monossacaride_dict_2 = {"comp_id": nonpoly_entity_comp_id, "entry_id": mmcif_dict["_entry.id"][0], "oligossacaride": False, "entity_id":  nonpoly_entity_id, "comp_num": None, "mol_num": mol_nums}
+    monossacaride_df_2 = pd.DataFrame(data = monossacaride_dict_2)
+
+    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'REF'])
+
+    monossacaride_df_2 = monossacaride_df_2[monossacaride_df_2.comp_id.isin(carbo_dict["carbo_id"].values)]
+    #print(monossacaride_df_2)
+
+monossacaride = pd.concat([monossacaride_df, monossacaride_df_2], ignore_index=True)
+print(monossacaride)
+
+#Chem comp identifier
+
+identifier_comp_id = mmcif_dict["_pdbx_chem_comp_identifier.comp_id"]
+identifier_type = mmcif_dict["_pdbx_chem_comp_identifier.type"]
+identifier_identifier = mmcif_dict["_pdbx_chem_comp_identifier.identifier"]
+
+identifier_dict = {"comp_id": identifier_comp_id, "type": identifier_type, "identifier": identifier_identifier}
+identifier_df = pd.DataFrame(data=identifier_dict)
+#print(identifier_df[(identifier_df.comp_id == 'AHR') & (identifier_df.type == 'IUPAC CARBOHYDRATE SYMBOL')]["identifier"])
+print(identifier_df)
+
+commom_names = []
+iupac_symbols = []
+
+for comp_id in monossacaride.comp_id:
+    commom_names.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'COMMON NAME')]["identifier"].values[0]) 
+    iupac_symbols.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'IUPAC CARBOHYDRATE SYMBOL')]["identifier"].values[0]) 
+
+monossacaride["commom_name"] = commom_names
+monossacaride["iupac_symbol"] = iupac_symbols
+
+print(monossacaride)
+
+monossacaride.to_csv(path_or_buf="/home/douglas_lima/pdb/monossacaride.csv")
+
+#print(monossacaride_df_2)
+#print(mmcif_dict["_entry.id"])
 #/////////////////////////////////////////////////////////////////////////////
 #
 # os.chdir("/home/douglas_lima/pdb/dicts")
@@ -75,7 +130,7 @@ print(monossacaride_df)
 #
 #/////////////////////////////////////////////////////////////////////////////
 
-carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'REF'])
+#carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'REF'])
 
 #print('SUM' in carbo_dict['carbo_id'].values)
 
