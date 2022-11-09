@@ -166,7 +166,7 @@ def separate(fileNames):
         entity_formula_weight = mmcif_dict["_entity.formula_weight"]
 
         #oligosaccharide DataFrame
-        if "_pdbx_entity_branch.entity_id" in mmcif_dict:
+        if "_pdbx_entity_branch.entity_id" in mmcif_dict.keys():
 
             entity_dict = {"id": entity_ids, "entry_id": mmcif_dict["_entry.id"][0], "type": entity_types, "description": entity_descriptions,"mol_num": entity_number_of_molecules, "formula_weight": entity_formula_weight}
             entity_df = pd.DataFrame(data = entity_dict)
@@ -241,7 +241,9 @@ def separate(fileNames):
 
 #fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 fileNames = ["/home/douglas_lima/pdb/testesCif/1v6u.cif", "/home/douglas_lima/pdb/testesCif/2wmg.cif", "/home/douglas_lima/pdb/testesCif/4of3.cif", "/home/douglas_lima/pdb/testesCif/5ebw.cif"]
-separate(fileNames)
+#separate(fileNames)
+dic = {"nome": 'doug', "idade": 37}
+
 
 #print(monosaccharide_df_2)
 #print(mmcif_dict["_entry.id"])
