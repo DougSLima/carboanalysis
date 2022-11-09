@@ -235,6 +235,7 @@ def separate(fileNames):
         
         monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
     
+    print(monosaccharides)
     monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv")
 
 

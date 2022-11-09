@@ -203,6 +203,7 @@ def separate(fileNames):
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
-print(fileNames)
-#print(filter_maxResolution(fileNames, 3))
-print(filter_containCarbo(fileNames))
+filtrados = filter_maxResolution(fileNames, 1.6)
+filtrados = filter_maxOWAB(fileNames, 60)
+filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
+separate(fileNames)
