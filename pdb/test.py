@@ -138,7 +138,8 @@ def filter_containCarbo(fileNames):
         for entry in filteredEntries:
             #escreve cada entry_id em uma nova linha
             file.write("%s\n" % entry)
-            
+        print('Done')
+
     return filteredFileNames
 
 #Separa os monossacarídeos e oligossacarídeos em dois pd.DataFrames e gera os respectivos arquivos .csv
@@ -234,8 +235,8 @@ def separate(fileNames):
         
         monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
     
-    #mudar pra criar csv
-    print(monosaccharides)
+    monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv")
+
 
 #fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 fileNames = ["/home/douglas_lima/pdb/testesCif/1v6u.cif", "/home/douglas_lima/pdb/testesCif/2wmg.cif", "/home/douglas_lima/pdb/testesCif/4of3.cif", "/home/douglas_lima/pdb/testesCif/5ebw.cif"]
