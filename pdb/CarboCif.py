@@ -3,22 +3,22 @@ import pandas as pd
 import warnings
 from Bio.PDB import *
 from Bio.PDB.MMCIF2Dict import *
-from Bio.PDB.PDBExceptions import PDBConstructionWarning #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
+from Bio.PDB.PDBExceptions import PDBConstructionWarning 
 
-warnings.simplefilter('ignore', PDBConstructionWarning)
+warnings.simplefilter('ignore', PDBConstructionWarning) #ignorar warning (PDBConstructionWarning: WARNING: Chain B is discontinuous at line numeroDaLinha.)
 
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem resoluções maiores que a resolução máxima selecionada
 def filter_maxResolution(fileNames, maxResolution):
 
     filteredFileNames = [] # lista de filtrados
-    pdbParser = MMCIFParser()
+    pdbParser = MMCIFParser() # parser Biopython
 
     for fileName in fileNames:
         file = open(fileName, 'r')
         structure = pdbParser.get_structure(file.name, file)
         file.close()
         
-        if structure.header.get("resolution") <= maxResolution: # Testa se a resolução da estrutura é menor ou igual a resolução desejada (atributo da função)
+        if structure.header.get("resolution") <= maxResolution: # Testa se a resolução da estrutura é menor ou igual a resolução desejada (atributo da função: maxResolution)
             filteredFileNames.append(fileName)
     
     return filteredFileNames
@@ -26,8 +26,8 @@ def filter_maxResolution(fileNames, maxResolution):
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem OWAB maiores que o OWAB máximo selecionado
 def filter_maxOWAB(fileNames, maxOWAB):
 
-    filteredFileNames = []
-    pdbParser = FastMMCIFParser()
+    filteredFileNames = [] # lista de filtrados
+    pdbParser = FastMMCIFParser() # parser Biopython
 
     for fileName in fileNames:
         file = open(fileName, 'r')
@@ -83,7 +83,7 @@ def filter_containCarbo(fileNames):
     
     filteredFileNames = []
     filteredEntries = []
-    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # Release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
+    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
 
     for fileName in fileNames:
         
@@ -95,10 +95,10 @@ def filter_containCarbo(fileNames):
             filteredFileNames.append(fileName)
             filteredEntries.append(mmcif_dict["_entry.id"][0])
 
-    #Escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
+    # escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
     with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
         for entry in filteredEntries:
-            #escreve cada entry_id em uma nova linha
+            # escreve cada entry_id em uma nova linha
             file.write("%s\n" % entry)
         print('Done: carbo_entrys.txt')    
 
@@ -110,25 +110,25 @@ def separate(fileNames):
     
     fileNames = filter_containCarbo(fileNames)
 
-    oligosaccharide_df = pd.DataFrame()
-    olig_monosaccharide_df = pd.DataFrame()
-    monosaccharide_df = pd.DataFrame()
-    olig_and_non_olig_monosaccharides = pd.DataFrame()
-    monosaccharides = pd.DataFrame()
+    oligosaccharide_df = pd.DataFrame() # dataframe de oligossacarídeos
+    olig_monosaccharide_df = pd.DataFrame() # dataframe de monossacarídeos contidos em oligossacarídeos
+    monosaccharide_df = pd.DataFrame() # dataframe de monossacarídeos "isolados"
+    olig_and_non_olig_monosaccharides = pd.DataFrame() # dataframe que junta os dois acima (monossacarídeos que pertencem a oligossacarídeos + monossacarídeos "isolados")
+    monosaccharides = pd.DataFrame() # dataframe resultante após a adição de commom names e iupac names no dataframe olig_and_non_olig_monosaccharides
 
     for fileName in fileNames:
 
-        #cria um dicionário a partir do arquivo .cif
+        # cria um dicionário a partir do arquivo .cif
         mmcif_dict = MMCIF2Dict(fileName)
         
-        #entity data
+        # entity data
         entity_ids = mmcif_dict["_entity.id"]
         entity_types = mmcif_dict["_entity.type"]
         entity_descriptions = mmcif_dict["_entity.pdbx_description"]
         entity_number_of_molecules = mmcif_dict["_entity.pdbx_number_of_molecules"]
         entity_formula_weight = mmcif_dict["_entity.formula_weight"]
 
-        #oligosaccharide DataFrame
+        # oligosaccharide DataFrame
         if "_pdbx_entity_branch.entity_id" in mmcif_dict:
 
             entity_dict = {"id": entity_ids, "entry_id": mmcif_dict["_entry.id"][0], "type": entity_types, "description": entity_descriptions,"mol_num": entity_number_of_molecules, "formula_weight": entity_formula_weight}
@@ -137,14 +137,14 @@ def separate(fileNames):
             branch_entity_id = mmcif_dict["_pdbx_entity_branch.entity_id"]
             branch_entity_type = mmcif_dict["_pdbx_entity_branch.type"]
 
-            #usa a lista de ids de entidade e de tipo pra verificar quais entidades são oligossacarídeos
+            # usa a lista de ids de entidade e de tipo pra verificar quais entidades são oligossacarídeos
             olig_dic = dict(zip(branch_entity_id, branch_entity_type))
 
             entity_df = entity_df[entity_df.id.isin([k for k, v in olig_dic.items() if v == 'oligosaccharide'])]
             
             oligosaccharide_df = pd.concat([oligosaccharide_df, entity_df], ignore_index=True)
 
-        #monosaccharide from oligosaccharide DataFrame
+        # monosaccharide from oligosaccharide DataFrame
         if "_pdbx_entity_branch_list.entity_id" in mmcif_dict:
 
             branch_list_entity_id = mmcif_dict["_pdbx_entity_branch_list.entity_id"]
@@ -158,7 +158,7 @@ def separate(fileNames):
             olig_monosaccharide_dict = {"comp_id": branch_list_comp_id, "entry_id": mmcif_dict["_entry.id"][0], "oligossacaride": True, "entity_id": branch_list_entity_id, "comp_num": branch_list_comp_num, "mol_num": mol_nums}
             olig_monosaccharide_df = pd.DataFrame(data = olig_monosaccharide_dict)
 
-        #non-oligosaccharide monosaccharides
+        # non-oligosaccharide monosaccharides
         if "_pdbx_entity_nonpoly.entity_id" in mmcif_dict:
 
             nonpoly_entity_id = mmcif_dict["_pdbx_entity_nonpoly.entity_id"]
@@ -175,10 +175,10 @@ def separate(fileNames):
 
             monosaccharide_df = monosaccharide_df[monosaccharide_df.comp_id.isin(carbo_dict["carbo_id"].values)]
            
-        #junta os dataframes dos monossacarídeos
+        # junta os dataframes dos monossacarídeos
         olig_and_non_olig_monosaccharides = pd.concat([olig_monosaccharide_df, monosaccharide_df], ignore_index=True)
         
-    #Chem comp identifier
+    # chem comp identifier
         identifier_comp_id = mmcif_dict["_pdbx_chem_comp_identifier.comp_id"]
         identifier_type = mmcif_dict["_pdbx_chem_comp_identifier.type"]
         identifier_identifier = mmcif_dict["_pdbx_chem_comp_identifier.identifier"]
