@@ -158,7 +158,7 @@ def separate(fileNames):
             olig_monosaccharide_dict = {"comp_id": branch_list_comp_id, "entry_id": mmcif_dict["_entry.id"][0], "oligossacaride": True, "entity_id": branch_list_entity_id, "comp_num": branch_list_comp_num, "mol_num": mol_nums}
             olig_monosaccharide_df = pd.DataFrame(data = olig_monosaccharide_dict)
 
-        # non-oligosaccharide monosaccharides
+        # non-oligosaccharide monosaccharides DataFrame
         if "_pdbx_entity_nonpoly.entity_id" in mmcif_dict:
 
             nonpoly_entity_id = mmcif_dict["_pdbx_entity_nonpoly.entity_id"]
@@ -199,6 +199,7 @@ def separate(fileNames):
         monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
     
     monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv")
+    oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv")
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
