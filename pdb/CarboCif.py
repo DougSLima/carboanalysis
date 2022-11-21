@@ -125,7 +125,7 @@ def separate(fileNames):
         entity_ids = mmcif_dict["_entity.id"]
         entity_types = mmcif_dict["_entity.type"]
         entity_descriptions = mmcif_dict["_entity.pdbx_description"]
-        entity_number_of_molecules = mmcif_dict["_entity.pdbx_number_of_molecules"]
+        entity_number_of_molecules = [eval(i) for i in mmcif_dict["_entity.pdbx_number_of_molecules"]] # usando eval() pra converter o numero de moleculas de str pra int
         entity_formula_weight = mmcif_dict["_entity.formula_weight"]
 
         # oligosaccharide DataFrame
@@ -198,8 +198,24 @@ def separate(fileNames):
         
         monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
     
-    monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv")
-    oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv")
+    monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv") # escreve o .csv a partir do DataFrame dos monossacarídeos
+    oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv") # escreve o .csv a partir do DataFrame dos oligossacarídeos
+    
+    # monosaccharides_sum DataFrame (.csv)
+    comp_ids = []
+    sums = []
+    commom_names = []
+    iupac_symbols = []
+
+    for carbo in monosaccharides.comp_id.unique(): # realiza a iteração para cada TAG (comp_id) única 
+        comp_ids.append(carbo)
+        sums.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum())
+        commom_names.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique()[0])
+        iupac_symbols.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique()[0])
+
+    carbo_dict = {"comp_id": comp_ids, "sum": sums, "commom_name": commom_names, "iupac_symbol": iupac_symbols}
+    carbo_df = pd.DataFrame(data = carbo_dict)
+    carbo_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
