@@ -175,10 +175,10 @@ def separate(fileNames):
 
             monosaccharide_df = monosaccharide_df[monosaccharide_df.comp_id.isin(carbo_dict["carbo_id"].values)]
            
-        # junta os dataframes dos monossacarídeos
-        olig_and_non_olig_monosaccharides = pd.concat([olig_monosaccharide_df, monosaccharide_df], ignore_index=True)
+        # junta os DataFrames dos monossacarídeos que pertencem com os que não pertencem a oligossacarídeos
+        olig_and_non_olig_monosaccharides = pd.concat([olig_monosaccharide_df, monosaccharide_df], ignore_index=True) 
         
-    # chem comp identifier
+    # chem comp identifier   
         identifier_comp_id = mmcif_dict["_pdbx_chem_comp_identifier.comp_id"]
         identifier_type = mmcif_dict["_pdbx_chem_comp_identifier.type"]
         identifier_identifier = mmcif_dict["_pdbx_chem_comp_identifier.identifier"]
@@ -207,9 +207,10 @@ def separate(fileNames):
     commom_names = []
     iupac_symbols = []
 
+    # monta as listas das variáveis pra formar o DataFrame
     for carbo in monosaccharides.comp_id.unique(): # realiza a iteração para cada TAG (comp_id) única 
         comp_ids.append(carbo)
-        sums.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum())
+        sums.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum()) # soma a coluna do número de moléculas pra todas as linhas que tiverem a mesma TAG de monômeros
         commom_names.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique()[0])
         iupac_symbols.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique()[0])
 
