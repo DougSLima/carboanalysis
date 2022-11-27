@@ -222,7 +222,7 @@ def separate(fileNames):
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
-filtrados = filter_maxResolution(fileNames, 1.6)
+filtrados = filter_maxResolution(fileNames, 2)
 filtrados = filter_maxOWAB(fileNames, 60)
 filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
 separate(fileNames)
