@@ -227,28 +227,28 @@ filtrados = filter_maxOWAB(fileNames, 60)
 filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
 separate(fileNames)
 
-monosaccharides = pd.read_csv('/home/douglas_lima/pdb/dataframes/monosaccharides.csv')
-unique_monosaccharides = monosaccharides.comp_id.unique()
+# monosaccharides = pd.read_csv('/home/douglas_lima/pdb/dataframes/monosaccharides.csv')
+# unique_monosaccharides = monosaccharides.comp_id.unique()
 #print(monosaccharides)
 #print(unique_monosaccharides)
 
 #if(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique().size == 1):
 #if(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique().size == 1):
 
-comp_ids = []
-sums = []
-commom_names = []
-iupac_symbols = []
+# comp_ids = []
+# sums = []
+# commom_names = []
+# iupac_symbols = []
 #print(monosaccharides.loc[monosaccharides['comp_id'] == 'NAG', 'iupac_symbol'].unique())
 
-for carbo in unique_monosaccharides:
+#for carbo in unique_monosaccharides:
     #print(carbo + " === " + str(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum()))
-    comp_ids.append(carbo)
+    #comp_ids.append(carbo)
     #sums.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum())
-    commom_names.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique()[0])
-    iupac_symbols.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique()[0])
+    #commom_names.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique()[0])
+    #iupac_symbols.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique()[0])
 
-carbo_dict = {"comp_id": comp_ids, "sum": sums, "commom_name": commom_names, "iupac_symbol": iupac_symbols}
+#carbo_dict = {"comp_id": comp_ids, "sum": sums, "commom_name": commom_names, "iupac_symbol": iupac_symbols}
 #carbo_df = pd.DataFrame(data = carbo_dict)
 
 #print(carbo_df)
