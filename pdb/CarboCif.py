@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import warnings
+from pathlib import *
 from Bio.PDB import *
 from Bio.PDB.MMCIF2Dict import *
 from Bio.PDB.PDBExceptions import PDBConstructionWarning 
@@ -83,8 +84,8 @@ def filter_containCarbo(fileNames):
     
     filteredFileNames = []
     filteredEntries = []
-    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
-
+    #carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
+    carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
     for fileName in fileNames:
         
         mmcif_dict = MMCIF2Dict(fileName)
@@ -96,7 +97,8 @@ def filter_containCarbo(fileNames):
             filteredEntries.append(mmcif_dict["_entry.id"][0])
 
     # escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
-    with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
+    #with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", "w") as file:
         for entry in filteredEntries:
             # escreve cada entry_id em uma nova linha
             file.write("%s\n" % entry)
@@ -171,7 +173,8 @@ def separate(fileNames):
             monosaccharide_dict = {"comp_id": nonpoly_entity_comp_id, "entry_id": mmcif_dict["_entry.id"][0], "oligossacaride": False, "entity_id":  nonpoly_entity_id, "comp_num": None, "mol_num": mol_nums}
             monosaccharide_df = pd.DataFrame(data = monosaccharide_dict)
 
-            carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'REF'])
+            #carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'REF'])
+            carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'REF'])
 
             monosaccharide_df = monosaccharide_df[monosaccharide_df.comp_id.isin(carbo_dict["carbo_id"].values)]
            
@@ -198,9 +201,12 @@ def separate(fileNames):
         
         monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
     
-    monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv") # escreve o .csv a partir do DataFrame dos monossacarídeos
-    oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv") # escreve o .csv a partir do DataFrame dos oligossacarídeos
+    #monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv") # escreve o .csv a partir do DataFrame dos monossacarídeos
+    #oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv") # escreve o .csv a partir do DataFrame dos oligossacarídeos
     
+    monosaccharides.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/monosaccharides.csv") # escreve o .csv a partir do DataFrame dos monossacarídeos
+    oligosaccharide_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/oligosaccharides.csv") # escreve o .csv a partir do DataFrame dos oligossacarídeos
+
     # monosaccharides_sum DataFrame (.csv)
     comp_ids = []
     sums = []
@@ -216,12 +222,15 @@ def separate(fileNames):
 
     carbo_dict = {"comp_id": comp_ids, "sum": sums, "commom_name": commom_names, "iupac_symbol": iupac_symbols}
     carbo_df = pd.DataFrame(data = carbo_dict)
-    carbo_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
+    #carbo_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
+    carbo_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/monosaccharides_sum.csv")
 
-os.chdir("/home/douglas_lima/pdb/testesCif")
-fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
+# os.chdir("/home/douglas_lima/pdb/testesCif")
+# fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
+os.chdir("/home/douglas/carboanalysis/data/unzipped")
+fileNames = os.listdir("/home/douglas/carboanalysis/data/unzipped")
 
-filtrados = filter_maxResolution(fileNames, 1.6)
+filtrados = filter_maxResolution(fileNames, 2)
 filtrados = filter_maxOWAB(fileNames, 60)
 filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
 separate(fileNames)
