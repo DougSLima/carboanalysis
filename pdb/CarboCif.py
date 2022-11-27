@@ -230,7 +230,8 @@ def separate(fileNames):
 os.chdir("/home/douglas/carboanalysis/data/unzipped")
 fileNames = os.listdir("/home/douglas/carboanalysis/data/unzipped")
 
+filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
 filtrados = filter_maxResolution(fileNames, 2)
 filtrados = filter_maxOWAB(fileNames, 60)
-filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
+
 separate(fileNames)
