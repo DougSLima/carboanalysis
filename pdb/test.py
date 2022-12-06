@@ -109,7 +109,7 @@ def filter_containCarbo(fileNames):
 # Separa os monossacarideos e oligossacarideos em dois dataframes gerando dois arquivos .csv
 # Chama: filter_containCarbo()
 def separate(fileNames):
-    
+
     fileNames = filter_containCarbo(fileNames)
 
     oligosaccharide_df = pd.DataFrame() # dataframe de oligossacarídeos
@@ -119,6 +119,12 @@ def separate(fileNames):
     monosaccharides = pd.DataFrame() # dataframe resultante após a adição de commom names e iupac names no dataframe olig_and_non_olig_monosaccharides
 
     for fileName in fileNames:
+
+        print("Analysing: " + fileName)
+
+        entity_df = pd.DataFrame()
+        olig_monosaccharide_df = pd.DataFrame() # dataframe de monossacarídeos contidos em oligossacarídeos
+        monosaccharide_df = pd.DataFrame() # dataframe de monossacarídeos "isolados"
 
         # cria um dicionário a partir do arquivo .cif
         mmcif_dict = MMCIF2Dict(fileName)
@@ -188,43 +194,44 @@ def separate(fileNames):
         identifier_dict = {"comp_id": identifier_comp_id, "type": identifier_type, "identifier": identifier_identifier}
         identifier_df = pd.DataFrame(data=identifier_dict)
 
+        print(olig_and_non_olig_monosaccharides)
+        print(identifier_df)
+
         commom_names = []
         iupac_symbols = []
 
         for comp_id in olig_and_non_olig_monosaccharides.comp_id:
-            commom_names.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'COMMON NAME')]["identifier"].values[0]) 
-            iupac_symbols.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'IUPAC CARBOHYDRATE SYMBOL')]["identifier"].values[0]) 
+            print(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'COMMON NAME')]["identifier"].values)
+            commom_names.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'COMMON NAME')]["identifier"].values) 
+            iupac_symbols.append(identifier_df[(identifier_df.comp_id == comp_id) & (identifier_df.type == 'IUPAC CARBOHYDRATE SYMBOL')]["identifier"].values) 
     
-        olig_and_non_olig_monosaccharides["commom_name"] = commom_names
-        olig_and_non_olig_monosaccharides["iupac_symbol"] = iupac_symbols      
+    #     olig_and_non_olig_monosaccharides["commom_name"] = commom_names
+    #     olig_and_non_olig_monosaccharides["iupac_symbol"] = iupac_symbols      
         
-        monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
+    #     monosaccharides = pd.concat([monosaccharides, olig_and_non_olig_monosaccharides], ignore_index=True)
     
-    monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv") # escreve o .csv de monossacarídeos
-    oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv") # escreve o .csv de oligossacarídeos
+    # monosaccharides.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides.csv") # escreve o .csv de monossacarídeos
+    # oligosaccharide_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/oligosaccharides.csv") # escreve o .csv de oligossacarídeos
 
-    # monosaccharides_sum DataFrame (.csv)
-    comp_ids = []
-    sums = []
-    commom_names = []
-    iupac_symbols = []
+    # # monosaccharides_sum DataFrame (.csv)
+    # comp_ids = []
+    # sums = []
+    # commom_names = []
+    # iupac_symbols = []
 
-    for carbo in monosaccharides.comp_id.unique(): # realiza a iteração para cada TAG (comp_id) única 
-        comp_ids.append(carbo)
-        sums.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum())
-        commom_names.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique()[0])
-        iupac_symbols.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique()[0])
+    # for carbo in monosaccharides.comp_id.unique(): # realiza a iteração para cada TAG (comp_id) única 
+    #     comp_ids.append(carbo)
+    #     sums.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'mol_num'].sum())
+    #     commom_names.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'commom_name'].unique()[0])
+    #     iupac_symbols.append(monosaccharides.loc[monosaccharides['comp_id'] == carbo, 'iupac_symbol'].unique()[0])
 
-    carbo_dict = {"comp_id": comp_ids, "sum": sums, "commom_name": commom_names, "iupac_symbol": iupac_symbols}
-    carbo_df = pd.DataFrame(data = carbo_dict)
-    carbo_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
+    # carbo_dict = {"comp_id": comp_ids, "sum": sums, "commom_name": commom_names, "iupac_symbol": iupac_symbols}
+    # carbo_df = pd.DataFrame(data = carbo_dict)
+    # carbo_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
 
 os.chdir("/home/douglas_lima/pdb/testesCif")
 fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
 
-filtrados = filter_maxResolution(fileNames, 2)
-filtrados = filter_maxOWAB(fileNames, 60)
-filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
 separate(fileNames)
 
 # monosaccharides = pd.read_csv('/home/douglas_lima/pdb/dataframes/monosaccharides.csv')
