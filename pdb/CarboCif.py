@@ -1,6 +1,12 @@
 import os
+import time
+import re
+from itertools import product
+from itertools import repeat
+import concurrent.futures
 import pandas as pd
 import warnings
+from multiprocessing import Process, Pool
 from pathlib import *
 from Bio.PDB import *
 from Bio.PDB.MMCIF2Dict import *
@@ -84,8 +90,8 @@ def filter_containCarbo(fileNames):
     
     filteredFileNames = []
     filteredEntries = []
-    #carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
-    carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
+    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
+    #carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status']) # release status values: https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_chem_comp.pdbx_release_status.html
     for fileName in fileNames:
         
         mmcif_dict = MMCIF2Dict(fileName)
@@ -97,8 +103,8 @@ def filter_containCarbo(fileNames):
             filteredEntries.append(mmcif_dict["_entry.id"][0])
 
     # escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
-    #with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
-    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", "w") as file:
+    with open("/home/douglas_lima/pdb/dataframes/carbo_entrys.txt", "w") as file:
+    #with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", "w") as file:
         for entry in filteredEntries:
             # escreve cada entry_id em uma nova linha
             file.write("%s\n" % entry)
@@ -225,13 +231,48 @@ def separate(fileNames):
     #carbo_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/monosaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
     carbo_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/monosaccharides_sum.csv")
 
-# os.chdir("/home/douglas_lima/pdb/testesCif")
-# fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
-os.chdir("/home/douglas/carboanalysis/data/unzipped")
-fileNames = os.listdir("/home/douglas/carboanalysis/data/unzipped")
+def bfactor_values(fileName):
 
-filtrados = filter_structureMethod(fileNames, 'X-RAY CRYSTALLOGRAPHY')
-filtrados = filter_maxResolution(fileNames, 2)
-filtrados = filter_maxOWAB(fileNames, 60)
+    mmcif_dict = MMCIF2Dict(fileName)#_atom_site.B_iso_or_equiv
+    
+    atom_site_id = mmcif_dict['_atom_site.id'] 
+    atom_group = mmcif_dict['_atom_site.group_PDB']
+    entity_id = mmcif_dict['_atom_site.label_entity_id']
+    bfactors = mmcif_dict['_atom_site.B_iso_or_equiv']
+    
+    
 
-separate(fileNames)
+def bfactor_parser(fileNames):
+
+    pdbParser = MMCIFParser() # parser Biopython
+
+    for fileName in fileNames:
+        file = open(fileName, 'r')
+        structure = pdbParser.get_structure(file.name, file)
+        file.close()
+        atomList = Selection.unfold_entities(structure, 'A')
+        a = atomList[0]
+        print(a.get_bfactor())
+        a = atomList[35]
+        print(a.get_bfactor())
+        a = atomList[1200]
+        print(a.get_bfactor())
+
+os.chdir("/home/douglas_lima/pdb/testesCif")
+fileNames = os.listdir("/home/douglas_lima/pdb/testesCif")
+# os.chdir("/home/douglas/carboanalysis/data/unzipped")
+# fileNames = os.listdir("/home/douglas/carboanalysis/data/unzipped")
+
+# filtrados = filter_structureMethod(fileNames, 'X-RAY DIFFRACTION')
+# filtrados = filter_containCarbo(filtrados)
+
+
+# print(fileNames)
+# print(filtrados)
+
+filtrados = ["2wmg.cif"]
+bfactor_parser(filtrados)
+with Pool() as pool:
+        print("bfactor: Starting...")
+        results = [i for i in pool.map(bfactor_values, filtrados) if i is not None]
+        print("bfactor: Done!")
