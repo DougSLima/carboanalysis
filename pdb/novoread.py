@@ -198,7 +198,7 @@ def unique_monossaccharides():
     carbo_df.sort_values(by=['sum'], ascending=False)
     carbo_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/monossaccharides_sum.csv") # escreve o .csv com a soma da ocorrência dos monossacarídeos
 
-def bfactor_valuesERRADO(fileName):
+def bfactor_values(fileName):
 
     mmcif_dict = MMCIF2Dict(fileName)#_atom_site.B_iso_or_equiv
     
@@ -211,7 +211,7 @@ def bfactor_valuesERRADO(fileName):
     # entity_seq_num = mmcif_dict['_atom_site.label_seq_id']
     
     # junta os dataframes dos monossacarídeos
-    atom_df_dict = {"group": mmcif_dict['_atom_site.group_PDB'], "atom_id": mmcif_dict['_atom_site.id'], "comp":  mmcif_dict['_atom_site.label_comp_id'], "atom_label": mmcif_dict['_atom_site.label_atom_id'], "bfactors": mmcif_dict['_atom_site.B_iso_or_equiv'], "entity_id": mmcif_dict['_atom_site.label_entity_id'],
+    atom_df_dict = {"group": mmcif_dict['_atom_site.group_PDB'], "atom_id": mmcif_dict['_atom_site.id'], "comp":  mmcif_dict['_atom_site.label_comp_id'], "atom_symbol": mmcif_dict["_atom_site.type_symbol"], "atom_label": mmcif_dict['_atom_site.label_atom_id'], "bfactors": mmcif_dict['_atom_site.B_iso_or_equiv'], "entity_id": mmcif_dict['_atom_site.label_entity_id'],
                     "entity_seq_num": mmcif_dict['_atom_site.label_seq_id']}
     atom_df = pd.DataFrame(data = atom_df_dict)
 
@@ -279,8 +279,9 @@ def bfactor_valuesERRADO(fileName):
     print("Maior media: ", maiorMedia)
     print("maior comp:", maiorComp)
 
-    entry_dict = {"entry": mmcif_dict['_entry.id'], }
+    entry_dict = {"entry": mmcif_dict['_entry.id'], "polymer_mean": polymer_mean, "mbfctor_comp": maiorComp, "mbfcator_mean": maiorMedia, "diff": polymer_mean - maiorMedia}
     entry_df = pd.DataFrame(data = entry_dict)
+    entry_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/bfactors.csv", mode='a', index=False, header=False, sep=";")
 
 
 
@@ -311,12 +312,12 @@ fileNames = os.listdir("/home/douglas_lima/pdb/testesBfactor")
 # print(fileNames)
 # print(filtrados)
 
-filtrados = ["3ooj.cif"]
+filtrados = ["2wmg.cif"]
 # for i in filtrados:
 #     bfactor_values(i)
 with Pool() as pool:
         print("bfactor: Starting...")
-        results = [i for i in pool.map(bfactor_valuesERRADO, filtrados) if i is not None]
+        results = [i for i in pool.map(bfactor_values, fileNames) if i is not None]
         print("bfactor: Done!")
 
 # if __name__ == '__main__':
