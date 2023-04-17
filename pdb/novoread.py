@@ -200,6 +200,8 @@ def unique_monossaccharides():
 
 def bfactor_values(fileName):
 
+    print("B - factor values: " + fileName)
+
     mmcif_dict = MMCIF2Dict(fileName)#_atom_site.B_iso_or_equiv
     
     # atom_group = mmcif_dict['_atom_site.group_PDB']
@@ -224,20 +226,20 @@ def bfactor_values(fileName):
     #separa os hetero atomos
     hetatm_df = atom_df.loc[atom_df['group'] == 'HETATM']
 
-    print(hetatm_df)
+    #print(hetatm_df)
     #remove moléculas de água
     hetatm_df = hetatm_df.loc[hetatm_df['comp'] != 'HOH']
 
-    print(hetatm_df)
+    #print(hetatm_df)
 
     #Separa so os carboidratos
-    #carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
-    carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
+    carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
+    # carbo_dict = pd.read_csv("/home/douglas_lima/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
     carbo_list = carbo_dict["carbo_id"].values
 
     hetatm_df = hetatm_df.loc[hetatm_df['comp'].isin(carbo_list)]
 
-    print(hetatm_df)
+    #print(hetatm_df)
 
     #reseta os index
     hetatm_df = hetatm_df.reset_index()
@@ -265,43 +267,28 @@ def bfactor_values(fileName):
                     maiorMedia = media
                     maiorComp = comp
             
-                print(comp + ' trocou para: ' + row['comp'])
+                # print(comp + ' trocou para: ' + row['comp'])
                 comp = row["comp"]
-                print(bfactors)
-                print("Media: " + str(media))
+                # print(bfactors)
+                # print("Media: " + str(media))
                 bfactors = []
-                print("Maior media: " + str(maiorMedia))
-                print("Maior comp: " + maiorComp)
+                # print("Maior media: " + str(maiorMedia))
+                # print("Maior comp: " + maiorComp)
             
             bfactors.append(row["bfactors"])
     
-    print("Media polimero: ", polymer_mean)
-    print("Maior media: ", maiorMedia)
-    print("maior comp:", maiorComp)
+    # print("Media polimero: ", polymer_mean)
+    # print("Maior media: ", maiorMedia)
+    # print("maior comp:", maiorComp)
 
     entry_dict = {"entry": mmcif_dict['_entry.id'], "polymer_mean": polymer_mean, "mbfctor_comp": maiorComp, "mbfcator_mean": maiorMedia, "diff": polymer_mean - maiorMedia}
     entry_df = pd.DataFrame(data = entry_dict)
-    entry_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/bfactors.csv", mode='a', index=False, header=False, sep=";")
+    #entry_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/bfactors.csv", mode='a', index=False, header=False, sep=";")
+    entry_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/bfactors.csv", mode='a', index=False, header=False, sep=";")
 
 
-
-def bfactor(fileName):
-    p = MMCIFParser()
-    structure = p.get_structure(fileName, fileName)
-    residues = structure.get_residues()
-
-    for r in residues:
-        print(r)
-
-    
-
-
-
-
-
-
-os.chdir("/home/douglas_lima/pdb/testesBfactor")
-fileNames = os.listdir("/home/douglas_lima/pdb/testesBfactor")
+# os.chdir("/home/douglas_lima/pdb/testesBfactor")
+# fileNames = os.listdir("/home/douglas_lima/pdb/testesBfactor")
 # os.chdir("/home/douglas/carboanalysis/data/unzipped")
 # fileNames = os.listdir("/home/douglas/carboanalysis/data/unzipped")
 
@@ -309,15 +296,18 @@ fileNames = os.listdir("/home/douglas_lima/pdb/testesBfactor")
 # filtrados = filter_containCarbo(filtrados)
 
 
-# print(fileNames)
-# print(filtrados)
+df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", sep='\t', lineterminator='\n', names = ['entry_filename'])
 
-filtrados = ["2wmg.cif"]
-# for i in filtrados:
-#     bfactor_values(i)
+fileNames = df['entry_filename'].values
+
+os.chdir("/home/douglas/carboanalysis/data/unzipped")
+
 with Pool() as pool:
+        print("X-Ray Diffraction filter: Starting...")
+        results = [i for i in pool.map(filter_structureMethod, fileNames) if i is not None]
+        print("X-Ray Diffraction filter: Done!")
         print("bfactor: Starting...")
-        results = [i for i in pool.map(bfactor_values, fileNames) if i is not None]
+        results = [i for i in pool.map(bfactor_values, results) if i is not None]
         print("bfactor: Done!")
 
 # if __name__ == '__main__':
