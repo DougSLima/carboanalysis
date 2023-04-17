@@ -21,7 +21,7 @@ def filter_maxResolution(fileName):
     mmcif_dict = MMCIF2Dict(fileName)
 
     if "_reflns.d_resolution_high" in mmcif_dict.keys():
-        if float(mmcif_dict["_reflns.d_resolution_high"][0]) <= 2.5:
+        if float(mmcif_dict["_reflns.d_resolution_high"][0]) <= 2.0:
             return fileName
 
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem métodos de estrutura diferentes do método escolhido
@@ -306,6 +306,9 @@ with Pool() as pool:
         print("X-Ray Diffraction filter: Starting...")
         results = [i for i in pool.map(filter_structureMethod, fileNames) if i is not None]
         print("X-Ray Diffraction filter: Done!")
+        print("Resolution filter: Starting...")
+        results = [i for i in pool.map(filter_maxResolution, results) if i is not None]
+        print("Resolution filter: Done!")
         print("bfactor: Starting...")
         results = [i for i in pool.map(bfactor_values, results) if i is not None]
         print("bfactor: Done!")
