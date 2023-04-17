@@ -21,13 +21,24 @@ def filter_maxResolution(fileName):
     mmcif_dict = MMCIF2Dict(fileName)
     
     try:
-        resolution = float(mmcif_dict["_reflns.d_resolution_high"][0])
-    except ValueError:
+        resolution = float(mmcif_dict["_refine.ls_d_res_high"][0])
+    except ValueError as error:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/valueerror_entrys.txt", "a") as file:
+            file.write("%s\n" % fileName)
+        return None
+    except KeyError:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/keyerror_entrys.txt", "a") as file:
+            file.write("%s\n" % fileName) 
         return None
     
-    if("_reflns.d_resolution_high" in mmcif_dict.keys()):
-        if(resolution <= 2.0):
-            return fileName
+    try:
+        if("_refine.ls_d_res_high" in mmcif_dict.keys()):
+            if(resolution <= 2.0):
+                return fileName
+    except KeyError:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/keyerror_entrys.txt", "a") as file:
+            file.write("%s\n" % fileName) 
+        return None
 
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem métodos de estrutura diferentes do método escolhido
 def filter_structureMethod(fileName):
