@@ -19,9 +19,14 @@ warnings.simplefilter('ignore', PDBConstructionWarning) #ignorar warning (PDBCon
 def filter_maxResolution(fileName):
 
     mmcif_dict = MMCIF2Dict(fileName)
-
-    if "_reflns.d_resolution_high" in mmcif_dict.keys():
-        if float(mmcif_dict["_reflns.d_resolution_high"][0]) <= 2.0:
+    
+    try:
+        resolution = float(mmcif_dict["_reflns.d_resolution_high"][0])
+    except ValueError:
+        return None
+    
+    if("_reflns.d_resolution_high" in mmcif_dict.keys()):
+        if(resolution <= 2.0):
             return fileName
 
 # Remove da lista recebida todos os nomes de arquivos cujas estruturas apresentem métodos de estrutura diferentes do método escolhido
@@ -286,42 +291,39 @@ def bfactor_values(fileName):
     #entry_df.to_csv(path_or_buf="/home/douglas_lima/pdb/dataframes/bfactors.csv", mode='a', index=False, header=False, sep=";")
     entry_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/bfactors.csv", mode='a', index=False, header=False, sep=";")
 
-
-# os.chdir("/home/douglas_lima/pdb/testesBfactor")
-# fileNames = os.listdir("/home/douglas_lima/pdb/testesBfactor")
-# os.chdir("/home/douglas/carboanalysis/data/unzipped")
-# fileNames = os.listdir("/home/douglas/carboanalysis/data/unzipped")
-
-# filtrados = filter_structureMethod(fileNames, 'X-RAY DIFFRACTION')
-# filtrados = filter_containCarbo(filtrados)
-
-
-df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", sep='\t', lineterminator='\n', names = ['entry_filename'])
-
-fileNames = df['entry_filename'].values
-
-os.chdir("/home/douglas/carboanalysis/data/unzipped")
-
-with Pool() as pool:
-        print("X-Ray Diffraction filter: Starting...")
-        results = [i for i in pool.map(filter_structureMethod, fileNames) if i is not None]
-        print("X-Ray Diffraction filter: Done!")
-        print("Resolution filter: Starting...")
-        results = [i for i in pool.map(filter_maxResolution, results) if i is not None]
-        print("Resolution filter: Done!")
-        print("bfactor: Starting...")
-        results = [i for i in pool.map(bfactor_values, results) if i is not None]
-        print("bfactor: Done!")
-
-# if __name__ == '__main__':
-
-#     start = time.time()
+def filter_OWAB(fileName):
     
-#     print("Unique processing...")
+    print("OWAB filtering: " + fileName)
 
-#     unique_monossaccharides()
+    mmcif_dict = MMCIF2Dict(fileName)
 
-#     print("Done!")
-   
-#     print("thread time: ", time.time() - start)
+    atom_df_dict = {"bfactor": mmcif_dict['_atom_site.B_iso_or_equiv'], "occupancy": mmcif_dict['_atom_site.occupancy']}
+    atom_df = pd.DataFrame(data = atom_df_dict)
+
+    atom_df['m'] = atom_df['bfactor']
     
+
+
+
+if __name__ == '__main__':
+
+    start = time.time()
+
+    df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", sep='\t', lineterminator='\n', names = ['entry_filename'])
+
+    fileNames = df['entry_filename'].values
+
+    os.chdir("/home/douglas/carboanalysis/data/unzipped")
+
+    with Pool() as pool:
+            print("X-Ray Diffraction filter: Starting...")
+            results = [i for i in pool.map(filter_structureMethod, fileNames) if i is not None]
+            print("X-Ray Diffraction filter: Done!")
+            print("Resolution filter: Starting...")
+            results = [i for i in pool.map(filter_maxResolution, results) if i is not None]
+            print("Resolution filter: Done!")
+            print("bfactor: Starting...")
+            results = [i for i in pool.map(bfactor_values, results) if i is not None]
+            print("bfactor: Done!")
+
+    print("thread time: ", time.time() - start)
