@@ -81,7 +81,7 @@ def filter_containCarbo(fileName):
 def write_carbo(fileName):
     print("Writing: " + fileName)
     # escreve um arquivo .txt com o nome das entradas cujas estrutuaras possuam carbohidratos
-    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", "a") as file:
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys_res_owab_filtered_nd.txt", "a") as file:
     #with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", "a") as file:
         file.write("%s\n" % fileName) 
 
@@ -308,10 +308,20 @@ def filter_OWAB(fileName):
 
     mmcif_dict = MMCIF2Dict(fileName)
 
+    #pandas df
     atom_df_dict = {"bfactor": mmcif_dict['_atom_site.B_iso_or_equiv'], "occupancy": mmcif_dict['_atom_site.occupancy']}
     atom_df = pd.DataFrame(data = atom_df_dict)
 
-    atom_df['m'] = atom_df['bfactor']
+    #string to float
+    atom_df['bfactor'] = atom_df["bfactor"].astype(float)
+    atom_df['occupancy'] = atom_df["occupancy"].astype(float)
+    
+    atom_df['m'] = atom_df['bfactor'] * atom_df['occupancy']
+
+    if(atom_df['m'].mean() <= 60):
+        return fileName
+    else:
+        return None
     
 
 
@@ -320,21 +330,37 @@ if __name__ == '__main__':
 
     start = time.time()
 
-    df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", sep='\t', lineterminator='\n', names = ['entry_filename'])
+    #df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys.txt", sep='\t', lineterminator='\n', names = ['entry_filename'])
+    #df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/resfilter_filenames.txt", names = ['entry_filename'])
+    #df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys_nd.txt", names = ['entry_filename'])
+    df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys_res_owab_filtered_nd.txt", names = ['entry_filename'])
 
     fileNames = df['entry_filename'].values
-
+    
     os.chdir("/home/douglas/carboanalysis/data/unzipped")
 
     with Pool() as pool:
-            print("X-Ray Diffraction filter: Starting...")
-            results = [i for i in pool.map(filter_structureMethod, fileNames) if i is not None]
-            print("X-Ray Diffraction filter: Done!")
-            print("Resolution filter: Starting...")
-            results = [i for i in pool.map(filter_maxResolution, results) if i is not None]
-            print("Resolution filter: Done!")
-            print("bfactor: Starting...")
-            results = [i for i in pool.map(bfactor_values, results) if i is not None]
-            print("bfactor: Done!")
+
+        # print("X-Ray Diffraction filter: Starting...")
+        # results = [i for i in pool.map(filter_structureMethod, fileNames) if i is not None]
+        # print("X-Ray Diffraction filter: Done!")
+        # print("Resolution filter: Starting...")
+        # results = [i for i in pool.map(filter_maxResolution, fileNames) if i is not None]
+        # print("Resolution filter: Done!")
+        # print("OWAB filter: Starting...")
+        # results = [i for i in pool.map(filter_OWAB, results) if i is not None]
+        # print("OWAB filter: Done!")
+        # print("bfactor: Starting...")
+        # results = [i for i in pool.map(bfactor_values, results) if i is not None]
+        # print("bfactor: Done!")
+        # print("Writing carbo_entrys file...")
+        # results = [i for i in pool.map(write_carbo, results) if i is not None]
+        # print("Writing Done!")
+        # print("Separating...")
+        # results = [i for i in pool.map(separate, fileNames) if i is not None]
+        # print("Separating Done!")
+        print("Unique...")
+        unique_monossaccharides()
+        print("Unique Done!")
 
     print("thread time: ", time.time() - start)
