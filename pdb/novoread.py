@@ -197,7 +197,7 @@ def separate(fileName):
 
 def unique_monossaccharides():
 
-    monossaccharides = pd.read_csv('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/monossaccharides.csv', index_col=None, names=['comp_id', 'entry_id', 'oligossaccharide', 'entity_id', 'comp_num', 'mol_num', 'name'], header=None)
+    monossaccharides = pd.read_csv('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/SIC/monossaccharides.csv', index_col=None, names=['comp_id', 'entry_id', 'oligossaccharide', 'entity_id', 'comp_num', 'mol_num', 'name'], header=None)
 
     # monossaccharides_sum DataFrame (.csv)
     comp_ids = []

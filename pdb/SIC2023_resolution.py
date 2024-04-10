@@ -314,6 +314,67 @@ def bfactor_values(fileName):
     entry_df = pd.DataFrame(data = entry_dict)
     entry_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/SIC/bfactors.csv", mode='a', index=False, header=False, sep=";")
 
+#Coleta os dados das ligações glicosídicas
+def find_linkages(fileName):
+    
+    #Cria um dicionário a partir do arquivo .cif
+    mmcif_dict = MMCIF2Dict(fileName)
+
+    try:
+        print('Linking: ' + fileName)
+
+        #Coleta informações das Branched entities
+        branch_dict = {"entity_id": mmcif_dict['_entity.id'], 
+                        "num_of_molecules": mmcif_dict['_entity.pdbx_number_of_molecules']}
+
+        #Transforma num dataframe pandas
+        branch_df = pd.DataFrame(data = branch_dict)
+
+        #converte a coluna "num_of_molecules" para inteiro
+        branch_df['num_of_molecules'] = branch_df['num_of_molecules'].astype(int)
+
+        #Coleta informações das ligações
+        linkage_dict = {"entry_id": mmcif_dict['_entry.id'],
+                        "link_id": mmcif_dict['_pdbx_entity_branch_link.link_id'], 
+                        "entity_id": mmcif_dict['_pdbx_entity_branch_link.entity_id'], 
+                        "branch_1_id":  mmcif_dict['_pdbx_entity_branch_link.entity_branch_list_num_1'], 
+                        "comp_1_id": mmcif_dict["_pdbx_entity_branch_link.comp_id_1"], 
+                        "atom_1_id": mmcif_dict['_pdbx_entity_branch_link.atom_id_1'], 
+                        "leaving_atom_1_id": mmcif_dict['_pdbx_entity_branch_link.leaving_atom_id_1'],
+                        "branch_2_id":  mmcif_dict['_pdbx_entity_branch_link.entity_branch_list_num_2'], 
+                        "comp_2_id": mmcif_dict["_pdbx_entity_branch_link.comp_id_2"], 
+                        "atom_2_id": mmcif_dict['_pdbx_entity_branch_link.atom_id_2'], 
+                        "leaving_atom_2_id": mmcif_dict['_pdbx_entity_branch_link.leaving_atom_id_2'],
+                        "order": mmcif_dict['_pdbx_entity_branch_link.value_order']}
+        
+        #Transforma num dataframe pandas
+        linkage_df = pd.DataFrame(data = linkage_dict)
+        
+        #Coleta informações de nomenclatura dos açúcares
+        identifier_dict = {"comp_id": mmcif_dict['_pdbx_chem_comp_identifier.comp_id'], 
+                        "identifier_type": mmcif_dict['_pdbx_chem_comp_identifier.type'], 
+                        "identifier":  mmcif_dict['_pdbx_chem_comp_identifier.identifier']}
+        
+        #Transforma num dataframe pandas
+        identifier_df = pd.DataFrame(data = identifier_dict)
+
+        #Leva em consideração o número de moleculas de cada entidade
+        num_of_molecules_list = []
+        for index, row in linkage_df.iterrows():
+            num_of_molecules_list.append(branch_df.loc[branch_df['entity_id'] == row['entity_id'], 'num_of_molecules'].values[0])
+        
+        #Adiciona esse número como uma nova coluna do dataframe linkage_df
+        linkage_df['num_of_molecules'] = num_of_molecules_list
+        
+
+        #Escreve a informação das ligações num arquivo .csv
+        linkage_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/SIC/all_linkages_v2.csv", mode='a', index=False, header=False, sep=";") 
+
+    except ValueError as error:
+        return None
+    except KeyError as error:
+        return None
+
 if __name__ == '__main__':
 
     start = time.time()
@@ -324,7 +385,7 @@ if __name__ == '__main__':
     df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/SIC/SIC2023_carbo_entrys_res_owab_filtered.txt", names = ['entry_filename'])
 
     fileNames = df['entry_filename'].values
-    
+
     os.chdir("/home/douglas/carboanalysis/data/unzipped")
 
     with Pool() as pool:
@@ -346,9 +407,11 @@ if __name__ == '__main__':
         # print("Writing carbo_entrys file...")
         # results = [i for i in pool.map(write_carbo, results) if i is not None]
         # print("Writing Done!")
-        print("Bfactoring...")
-        results = [i for i in pool.map(bfactor_values, fileNames) if i is not None]
-        print("Bfactor parsing Done!")
-
+        # print("Bfactoring...")
+        # results = [i for i in pool.map(bfactor_values, fileNames) if i is not None]
+        # print("Bfactor parsing Done!")
+        print("Linkage...")
+        results = [i for i in pool.map(find_linkages, fileNames) if i is not None]
+        print("Linkage parsing Done!")
 
     print("thread time: ", time.time() - start)
