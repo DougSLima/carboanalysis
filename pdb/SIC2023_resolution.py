@@ -246,7 +246,9 @@ def bfactor_values(fileName):
     # entity_seq_num = mmcif_dict['_atom_site.label_seq_id']
     
     # junta os dataframes dos monossacarídeos
-    atom_df_dict = {"group": mmcif_dict['_atom_site.group_PDB'], "atom_id": mmcif_dict['_atom_site.id'], "comp":  mmcif_dict['_atom_site.label_comp_id'], "atom_symbol": mmcif_dict["_atom_site.type_symbol"], "atom_label": mmcif_dict['_atom_site.label_atom_id'], "bfactors": mmcif_dict['_atom_site.B_iso_or_equiv'], "entity_id": mmcif_dict['_atom_site.label_entity_id'],
+    atom_df_dict = {"group": mmcif_dict['_atom_site.group_PDB'], "atom_id": mmcif_dict['_atom_site.id'], 
+                    "comp":  mmcif_dict['_atom_site.label_comp_id'], "atom_symbol": mmcif_dict["_atom_site.type_symbol"], 
+                    "atom_label": mmcif_dict['_atom_site.label_atom_id'], "bfactors": mmcif_dict['_atom_site.B_iso_or_equiv'], "entity_id": mmcif_dict['_atom_site.label_entity_id'],
                     "entity_seq_num": mmcif_dict['_atom_site.label_seq_id']}
     atom_df = pd.DataFrame(data = atom_df_dict)
 
@@ -374,6 +376,108 @@ def find_linkages(fileName):
         return None
     except KeyError as error:
         return None
+
+def write_sugar_line_pdb(fileName,sugar,group,id,label_atom_id,label_comp_id,label_asym_id,label_entity_id,Cartn_x,Cartn_y,Cartn_z,occupancy,B_iso_or_equiv,type_symbol):
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_sugars/" + fileName + "_" + sugar + "_" + id + ".txt", "w") as file:
+        file.write(group +
+                    id +
+                    label_atom_id +
+                    label_comp_id +
+                    label_asym_id +
+                    label_entity_id +
+                    Cartn_x +
+                    Cartn_y +
+                    Cartn_z +
+                    occupancy +
+                    B_iso_or_equiv +
+                    type_symbol 
+        )
+
+def write_tt(fileName, row, sugar, sugar_first_id):
+    try:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_sugars/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as file:
+            file.write(
+                f"{row['group']}"
+                f"{row['id']:>5} "
+                f"{row['label_atom_id']:<4}"
+                f"{row['label_comp_id']:>3} "
+                f"{row['label_asym_id']:>1}"
+                f"{row['label_entity_id']:>4}"
+                f"{row['Cartn_x']:>8.3f}"
+                f"{row['Cartn_y']:>8.3f}"
+                f"{row['Cartn_z']:>8.3f}"
+                f"{row['occupancy']:>6.2f}"
+                f"{row['B_iso_or_equiv']:>6.2f}          "
+                f"{row['type_symbol']:>2}\n"
+            )
+
+    except Exception as e:
+        with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
+            f.write(f"Erro: {str(e)}\n" + " file: " + fileName)
+        print(row)
+
+
+def separate_sugars(fileName):
+
+    print("Separating sugars: " + fileName)
+    
+    #Cria um dicionário a partir do arquivo .cif
+    mmcif_dict = MMCIF2Dict(fileName)
+
+    try:
+        #Separa as informações dos átomos
+        atom_dict = {"group": mmcif_dict['_atom_site.group_PDB'], 
+                        "id": mmcif_dict['_atom_site.id'], 
+                        "label_atom_id":  mmcif_dict['_atom_site.label_atom_id'],
+                        "label_comp_id":  mmcif_dict['_atom_site.label_comp_id'], 
+                        "label_asym_id":  mmcif_dict['_atom_site.label_asym_id'],
+                        "label_entity_id":  mmcif_dict['_atom_site.label_entity_id'],
+                        "Cartn_x":  mmcif_dict['_atom_site.Cartn_x'],
+                        "Cartn_y":  mmcif_dict['_atom_site.Cartn_y'],
+                        "Cartn_z":  mmcif_dict['_atom_site.Cartn_z'],
+                        "occupancy": mmcif_dict['_atom_site.occupancy'],
+                        "B_iso_or_equiv": mmcif_dict['_atom_site.B_iso_or_equiv'],
+                        "type_symbol": mmcif_dict['_atom_site.type_symbol']}
+        #Cria o dataframe de átomos
+        atom_df = pd.DataFrame(data = atom_dict)
+
+        #Separa os hetero atomos
+        hetatm_df = atom_df.loc[atom_df['group'] == 'HETATM']
+
+        #Transforma as colunas numéricas em float
+        hetatm_df["Cartn_x"] = hetatm_df["Cartn_x"].astype(float)
+        hetatm_df["Cartn_y"] = hetatm_df["Cartn_y"].astype(float)
+        hetatm_df["Cartn_z"] = hetatm_df["Cartn_z"].astype(float)
+        hetatm_df["occupancy"] = hetatm_df["occupancy"].astype(float)
+        hetatm_df["B_iso_or_equiv"] = hetatm_df["B_iso_or_equiv"].astype(float)
+
+        #Separa so os carboidratos
+        carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
+        carbo_list = carbo_dict["carbo_id"].values
+        hetatm_df = hetatm_df.loc[hetatm_df['label_comp_id'].isin(carbo_list)]
+
+        #reseta os index
+        hetatm_df = hetatm_df.reset_index()
+        
+        #Itera os açúcares e escreve um arquivo no formato pdb pra cada um deles
+        for index, row in hetatm_df.iterrows():
+            
+            if(index == 0):
+                iter_sugar = row["label_comp_id"]
+                iter_first_atom_id = row['id']
+                write_tt(fileName, row, iter_sugar, iter_first_atom_id)
+
+            else:
+                if(index == len(hetatm_df.index) - 1):
+                    write_tt(fileName, row, iter_sugar, iter_first_atom_id)
+
+                if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
+                    iter_sugar = row["label_comp_id"]
+                    iter_first_atom_id = row["id"]
+
+                write_tt(fileName, row, iter_sugar, iter_first_atom_id)
+    except:
+        pass
 
 if __name__ == '__main__':
 
