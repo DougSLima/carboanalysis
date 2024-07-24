@@ -458,6 +458,8 @@ def alter_dat(atoms_dict, ring_type, fileName, sugar, sugar_first_id):
             with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
                 f.write(f"Erro: {str(e)}\n" + " file: " + ring_type + " - " + atoms_dict)
 
+    return colvar_name
+
 def separate_sugars(fileName):
 
     print("Separating sugars: " + fileName)
@@ -515,14 +517,17 @@ def separate_sugars(fileName):
                 if(index == len(hetatm_df.index) - 1):
                     write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id)
                     #criar .dat e run bash
-                    alter_dat(sugar_atom_dict, is_piranose_or_furanose(iter_sugar, mmcif_dict), fileName, iter_sugar, iter_first_atom_id)
+                    ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
+                    colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
 
                 #Verifica se é o próximo açúcar
                 if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
                     #criar .dat e run bash
-                    alter_dat(sugar_atom_dict, is_piranose_or_furanose(iter_sugar, mmcif_dict), fileName, iter_sugar, iter_first_atom_id)
+                    ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
+                    colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
+                    
 
                     sugar_atom_dict = {}
                     iter_sugar = row["label_comp_id"]
