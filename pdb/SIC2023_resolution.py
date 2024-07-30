@@ -379,13 +379,14 @@ def find_linkages(fileName):
     except KeyError as error:
         return None
 
-def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id):
+def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id, new_atom_id):
+    #print(row)
     try:
         with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_sugars/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as f:
             
             # Formatar a linha de acordo com o padrão PDB
             pdb_line = "{:<6}{:>5} {:<4} {:<3} {:>1}{:>4}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}          {:<2}".format(
-                row['group'], row['id'], row['label_atom_id'], row['label_comp_id'], row['label_asym_id'], row['label_entity_id'],
+                row['group'], new_atom_id, row['label_atom_id'], row['label_comp_id'], row['label_asym_id'], row['label_entity_id'],
                 row['Cartn_x'], row['Cartn_y'], row['Cartn_z'], row['occupancy'], row['B_iso_or_equiv'],
                 row['type_symbol']
             )
@@ -394,7 +395,7 @@ def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id):
     except Exception as e:
         with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
             f.write(f"Erro: {str(e)}\n" + " file: " + fileName)
-        print(row)
+        
 
 def is_piranose_or_furanose(sugar_id, mmcif_dict):
     chem_comp_dict = {"comp_id": mmcif_dict['_chem_comp.id'], "name": mmcif_dict['_chem_comp.name']}
@@ -518,19 +519,22 @@ def separate_sugars(fileName):
             if(index == 0):
                 iter_sugar = row["label_comp_id"]
                 iter_first_atom_id = row['id']
+                atom_id_cont = 1
                 sugar_atom_dict = {row["label_atom_id"]: row['id']}
-                print(row["label_atom_id"] + " => " + row['id'])
-                write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id)
+                #print(row["label_atom_id"] + " => " + row['id'])
+                print(row["label_atom_id"] + " => " + str(index + 1))
+                write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
 
             else:
-                #Verifica se é a prmeira linha
+                #Verifica se é a última linha
                 if(index == len(hetatm_df.index) - 1):
-                    write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id)
+                    atom_id_cont += 1
+                    write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
                     #criar .dat e run bash
                     ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
                     colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
-                    run_puck(colvar_name)
+                    #run_puck(colvar_name)
 
                 #Verifica se é o próximo açúcar
                 if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
@@ -538,13 +542,15 @@ def separate_sugars(fileName):
                     ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
                     colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
-                    run_puck(colvar_name)
+                    #run_puck(colvar_name)
 
                     sugar_atom_dict = {}
                     iter_sugar = row["label_comp_id"]
                     iter_first_atom_id = row["id"]
+                    atom_id_cont = 0
                 
-                write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id)
+                atom_id_cont += 1
+                write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
                 sugar_atom_dict[row["label_atom_id"]] = row['id']
     except:
         pass
