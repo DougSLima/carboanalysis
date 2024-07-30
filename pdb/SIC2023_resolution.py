@@ -520,9 +520,8 @@ def separate_sugars(fileName):
                 iter_sugar = row["label_comp_id"]
                 iter_first_atom_id = row['id']
                 atom_id_cont = 1
-                sugar_atom_dict = {row["label_atom_id"]: row['id']}
-                #print(row["label_atom_id"] + " => " + row['id'])
-                print(row["label_atom_id"] + " => " + str(index + 1))
+                sugar_atom_dict = {row["label_atom_id"]: str(atom_id_cont)}
+
                 write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
 
             else:
@@ -530,6 +529,7 @@ def separate_sugars(fileName):
                 if(index == len(hetatm_df.index) - 1):
                     atom_id_cont += 1
                     write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
+                    sugar_atom_dict[row["label_atom_id"]] = str(atom_id_cont)
                     #criar .dat e run bash
                     ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
                     colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
@@ -551,7 +551,7 @@ def separate_sugars(fileName):
                 
                 atom_id_cont += 1
                 write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
-                sugar_atom_dict[row["label_atom_id"]] = row['id']
+                sugar_atom_dict[row["label_atom_id"]] = str(atom_id_cont)
     except:
         pass
 
