@@ -465,11 +465,16 @@ def alter_dat(atoms_dict, ring_type, fileName, sugar, sugar_first_id):
 def run_puck(colvar_name):
     parts = colvar_name.split("/colvar/", 1)
     pdb_file_name = parts[1] if len(parts) > 1 else ""
+
+    #Muda pra pasta onde está o .dat
+    os.chdir("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering")
     #Comando a ser executado
     command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_sugars/" + pdb_file_name
     # Executar o comando e capturar a saída
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    print(result)
+    print("Saída:", result.stdout)
+    print("Erro:", result.stderr)
+    print("Código de saída:", result.returncode)    
 
 def separate_sugars(fileName):
 
@@ -535,6 +540,8 @@ def separate_sugars(fileName):
                     colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
                     #run_puck(colvar_name)
+                    
+                    return 0
 
                 #Verifica se é o próximo açúcar
                 if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
