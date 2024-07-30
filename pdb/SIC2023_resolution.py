@@ -410,11 +410,9 @@ def is_piranose_or_furanose(sugar_id, mmcif_dict):
         return "furanose"
     
 def alter_dat(atoms_dict, ring_type, fileName, sugar, sugar_first_id):
-    print("entro no alter")
-    colvar_name = "/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pcukering/colvar/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id
+    colvar_name = "/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/colvar/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id
 
     if(ring_type == "pyranose"):
-        print("foi pir")
         try:
             o5 = atoms_dict['O5']
             c1 = atoms_dict['C1']
@@ -460,6 +458,13 @@ def alter_dat(atoms_dict, ring_type, fileName, sugar, sugar_first_id):
             with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
                 f.write(f"Erro: {str(e)}\n" + " file: " + ring_type + " - " + atoms_dict)
 
+    # Abre o arquivo em modo leitura
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", 'r') as file:
+        # Lê o conteúdo do arquivo
+        content = file.read()
+
+    # Imprime o conteúdo do arquivo
+    print(content)
     return colvar_name
 
 def run_puck(colvar_name):
@@ -468,13 +473,16 @@ def run_puck(colvar_name):
 
     #Muda pra pasta onde está o .dat
     os.chdir("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering")
+    print(os.getcwd())
     #Comando a ser executado
-    command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_sugars/" + pdb_file_name
+    command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_sugars/" + pdb_file_name + ".pdb"
+    print(command)
     # Executar o comando e capturar a saída
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    # Mostrar a saída do comando
     print("Saída:", result.stdout)
     print("Erro:", result.stderr)
-    print("Código de saída:", result.returncode)    
+    print("Código de saída:", result.returncode) 
 
 def separate_sugars(fileName):
 
@@ -539,7 +547,7 @@ def separate_sugars(fileName):
                     ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
                     colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
-                    #run_puck(colvar_name)
+                    run_puck(colvar_name)
                     
                     return 0
 
@@ -549,7 +557,7 @@ def separate_sugars(fileName):
                     ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
                     colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
                     #roda plumed driver com o dat criado
-                    #run_puck(colvar_name)
+                    run_puck(colvar_name)
 
                     sugar_atom_dict = {}
                     iter_sugar = row["label_comp_id"]
