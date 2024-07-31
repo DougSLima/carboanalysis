@@ -395,68 +395,83 @@ def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id, new_atom_id):
     except Exception as e:
         with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
             f.write(f"Erro: {str(e)}\n" + " file: " + fileName)
+    
+        return None
         
 
 def is_piranose_or_furanose(sugar_id, mmcif_dict):
-    chem_comp_dict = {"comp_id": mmcif_dict['_chem_comp.id'], "name": mmcif_dict['_chem_comp.name']}
-    chem_comp_df = pd.DataFrame(data = chem_comp_dict)
+    try:
+        chem_comp_dict = {"comp_id": mmcif_dict['_chem_comp.id'], "name": mmcif_dict['_chem_comp.name']}
+        chem_comp_df = pd.DataFrame(data = chem_comp_dict)
 
-    if("pyranose" in chem_comp_df[chem_comp_df.comp_id == sugar_id]["name"].values[0]):
-        print("pyr")
-        return "pyranose"
+        if("pyranose" in chem_comp_df[chem_comp_df.comp_id == sugar_id]["name"].values[0]):
+            print("pyr")
+            return "pyranose"
 
-    elif("furanose" in chem_comp_df[chem_comp_df.comp_id == sugar_id]["name"].values[0]):
-        print("fur")
-        return "furanose"
-    
+        elif("furanose" in chem_comp_df[chem_comp_df.comp_id == sugar_id]["name"].values[0]):
+            print("fur")
+            return "furanose"
+    except Exception as e:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/puckering_log.txt", "a") as f:
+            f.write("Exception: " + str(e) + "\n")
+        return None
+            
 def alter_dat(atoms_dict, ring_type, fileName, sugar, sugar_first_id):
-    colvar_name = "/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/colvar/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id
+    try:
+        colvar_name = "/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/colvar/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id
 
-    if(ring_type == "pyranose"):
-        try:
-            o5 = atoms_dict['O5']
-            c1 = atoms_dict['C1']
-            c2 = atoms_dict['C2']
-            c3 = atoms_dict['C3']
-            c4 = atoms_dict['C4']
-            c5 = atoms_dict['C5']
-            print(atoms_dict)
-            with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", "w") as f:
-                f.write("#plumed.dat\n" +
-                        "puck: PUCKERING ATOMS=" + 
-                        o5 + ',' +
-                        c1 + ',' +
-                        c2 + ',' +
-                        c3 + ',' +
-                        c4 + ',' +
-                        c5 + "\n" + 
-                        "PRINT ARG=puck.* FILE=" + colvar_name)
+        if(ring_type == "pyranose"):
+            try:
+                o5 = atoms_dict['O5']
+                c1 = atoms_dict['C1']
+                c2 = atoms_dict['C2']
+                c3 = atoms_dict['C3']
+                c4 = atoms_dict['C4']
+                c5 = atoms_dict['C5']
+                print(atoms_dict)
+                with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", "w") as f:
+                    f.write("#plumed.dat\n" +
+                            "puck: PUCKERING ATOMS=" + 
+                            o5 + ',' +
+                            c1 + ',' +
+                            c2 + ',' +
+                            c3 + ',' +
+                            c4 + ',' +
+                            c5 + "\n" + 
+                            "PRINT ARG=puck.* FILE=" + colvar_name)
 
-        except Exception as e:
-            with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
-                f.write(f"Erro: {str(e)}\n" + " file: " + ring_type + " - " + atoms_dict)
+            except Exception as e:
+                with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
+                    f.write(f"Erro: {str(e)}\n" + " file: " + ring_type + " - " + atoms_dict)
+                return None
 
-    elif(ring_type == "furanose"):
-        try:
-            c4 = atoms_dict['C4']
-            o4 = atoms_dict['O4']
-            c1 = atoms_dict['C1']
-            c2 = atoms_dict['C2']
-            c3 = atoms_dict['C3']
+        elif(ring_type == "furanose"):
+            try:
+                c4 = atoms_dict['C4']
+                o4 = atoms_dict['O4']
+                c1 = atoms_dict['C1']
+                c2 = atoms_dict['C2']
+                c3 = atoms_dict['C3']
 
-            with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", "w") as f:
-                f.write("#plumed.dat\n" +
-                        "puck: PUCKERING ATOMS=" + 
-                        c4 + ',' +
-                        o4 + ',' +
-                        c1 + ',' +
-                        c2 + ',' +
-                        c3 + "\n" + 
-                        "PRINT ARG=puck.* FILE=" + colvar_name)
+                with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", "w") as f:
+                    f.write("#plumed.dat\n" +
+                            "puck: PUCKERING ATOMS=" + 
+                            c4 + ',' +
+                            o4 + ',' +
+                            c1 + ',' +
+                            c2 + ',' +
+                            c3 + "\n" + 
+                            "PRINT ARG=puck.* FILE=" + colvar_name)
 
-        except Exception as e:
-            with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
-                f.write(f"Erro: {str(e)}\n" + " file: " + ring_type + " - " + atoms_dict)
+            except Exception as e:
+                with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
+                    f.write(f"Erro: {str(e)}\n" + " file: " + ring_type + " - " + atoms_dict)
+                return None
+            
+    except Exception as e:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/puckering_log.txt", "a") as f:
+            f.write("Exception: " + str(e) + "\n")
+        return None
 
     # Abre o arquivo em modo leitura
     with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", 'r') as file:
@@ -468,107 +483,122 @@ def alter_dat(atoms_dict, ring_type, fileName, sugar, sugar_first_id):
     return colvar_name
 
 def run_puck(colvar_name):
-    parts = colvar_name.split("/colvar/", 1)
-    pdb_file_name = parts[1] if len(parts) > 1 else ""
+    try:
+        parts = colvar_name.split("/colvar/", 1)
+        pdb_file_name = parts[1] if len(parts) > 1 else ""
 
-    #Muda pra pasta onde está o .dat
-    os.chdir("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering")
-    print(os.getcwd())
-    #Comando a ser executado
-    command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_sugars/" + pdb_file_name + ".pdb"
-    print(command)
-    # Executar o comando e capturar a saída
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    # Mostrar a saída do comando
-    print("Saída:", result.stdout)
-    print("Erro:", result.stderr)
-    print("Código de saída:", result.returncode) 
+        #Muda pra pasta onde está o .dat
+        os.chdir("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering")
+        print(os.getcwd())
+        #Comando a ser executado
+        command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_sugars/" + pdb_file_name + ".pdb"
+        print(command)
+        # Executar o comando e capturar a saída
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        # Mostrar a saída do comando
+        print("Saída:", result.stdout)
+        print("Erro:", result.stderr)
+        print("Código de saída:", result.returncode) 
+    except Exception as e:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/puckering_log.txt", "a") as f:
+            f.write("Exception: " + str(e) + "\n")
+        return None
 
 def separate_sugars(fileName):
-
-    print("Separating sugars: " + fileName)
-    
-    #Cria um dicionário a partir do arquivo .cif
-    mmcif_dict = MMCIF2Dict(fileName)
-
     try:
-        #Separa as informações dos átomos
-        atom_dict = {"group": mmcif_dict['_atom_site.group_PDB'], 
-                        "id": mmcif_dict['_atom_site.id'], 
-                        "label_atom_id":  mmcif_dict['_atom_site.label_atom_id'],
-                        "label_comp_id":  mmcif_dict['_atom_site.label_comp_id'], 
-                        "label_asym_id":  mmcif_dict['_atom_site.label_asym_id'],
-                        "label_entity_id":  mmcif_dict['_atom_site.label_entity_id'],
-                        "Cartn_x":  mmcif_dict['_atom_site.Cartn_x'],
-                        "Cartn_y":  mmcif_dict['_atom_site.Cartn_y'],
-                        "Cartn_z":  mmcif_dict['_atom_site.Cartn_z'],
-                        "occupancy": mmcif_dict['_atom_site.occupancy'],
-                        "B_iso_or_equiv": mmcif_dict['_atom_site.B_iso_or_equiv'],
-                        "type_symbol": mmcif_dict['_atom_site.type_symbol']}
-        #Cria o dataframe de átomos
-        atom_df = pd.DataFrame(data = atom_dict)
+        # Verifica se o arquivo existe
+        if not os.path.isfile(fileName):
+            raise FileNotFoundError(f"File not found: {fileName}")
 
-        #Separa os hetero atomos
-        hetatm_df = atom_df.loc[atom_df['group'] == 'HETATM']
+        print("Separating sugars: " + fileName)
+        
+        #Cria um dicionário a partir do arquivo .cif
+        mmcif_dict = MMCIF2Dict(fileName)
 
-        #Transforma as colunas numéricas em float
-        hetatm_df["Cartn_x"] = hetatm_df["Cartn_x"].astype(float)
-        hetatm_df["Cartn_y"] = hetatm_df["Cartn_y"].astype(float)
-        hetatm_df["Cartn_z"] = hetatm_df["Cartn_z"].astype(float)
-        hetatm_df["occupancy"] = hetatm_df["occupancy"].astype(float)
-        hetatm_df["B_iso_or_equiv"] = hetatm_df["B_iso_or_equiv"].astype(float)
+        try:
+            #Separa as informações dos átomos
+            atom_dict = {"group": mmcif_dict['_atom_site.group_PDB'], 
+                            "id": mmcif_dict['_atom_site.id'], 
+                            "label_atom_id":  mmcif_dict['_atom_site.label_atom_id'],
+                            "label_comp_id":  mmcif_dict['_atom_site.label_comp_id'], 
+                            "label_asym_id":  mmcif_dict['_atom_site.label_asym_id'],
+                            "label_entity_id":  mmcif_dict['_atom_site.label_entity_id'],
+                            "Cartn_x":  mmcif_dict['_atom_site.Cartn_x'],
+                            "Cartn_y":  mmcif_dict['_atom_site.Cartn_y'],
+                            "Cartn_z":  mmcif_dict['_atom_site.Cartn_z'],
+                            "occupancy": mmcif_dict['_atom_site.occupancy'],
+                            "B_iso_or_equiv": mmcif_dict['_atom_site.B_iso_or_equiv'],
+                            "type_symbol": mmcif_dict['_atom_site.type_symbol']}
+            #Cria o dataframe de átomos
+            atom_df = pd.DataFrame(data = atom_dict)
 
-        #Separa so os carboidratos
-        carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
-        carbo_list = carbo_dict["carbo_id"].values
-        hetatm_df = hetatm_df.loc[hetatm_df['label_comp_id'].isin(carbo_list)]
+            #Separa os hetero atomos
+            hetatm_df = atom_df.loc[atom_df['group'] == 'HETATM']
 
-        #reseta os index
-        hetatm_df = hetatm_df.reset_index()
+            #Transforma as colunas numéricas em float
+            hetatm_df["Cartn_x"] = hetatm_df["Cartn_x"].astype(float)
+            hetatm_df["Cartn_y"] = hetatm_df["Cartn_y"].astype(float)
+            hetatm_df["Cartn_z"] = hetatm_df["Cartn_z"].astype(float)
+            hetatm_df["occupancy"] = hetatm_df["occupancy"].astype(float)
+            hetatm_df["B_iso_or_equiv"] = hetatm_df["B_iso_or_equiv"].astype(float)
 
-        #Itera os açúcares e escreve um arquivo no formato pdb pra cada um deles
-        for index, row in hetatm_df.iterrows():
+            #Separa so os carboidratos
+            carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
+            carbo_list = carbo_dict["carbo_id"].values
+            hetatm_df = hetatm_df.loc[hetatm_df['label_comp_id'].isin(carbo_list)]
 
-            if(index == 0):
-                iter_sugar = row["label_comp_id"]
-                iter_first_atom_id = row['id']
-                atom_id_cont = 1
-                sugar_atom_dict = {row["label_atom_id"]: str(atom_id_cont)}
+            #reseta os index
+            hetatm_df = hetatm_df.reset_index()
 
-                write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
+            #Itera os açúcares e escreve um arquivo no formato pdb pra cada um deles
+            for index, row in hetatm_df.iterrows():
 
-            else:
-                #Verifica se é a última linha
-                if(index == len(hetatm_df.index) - 1):
+                if(index == 0):
+                    iter_sugar = row["label_comp_id"]
+                    iter_first_atom_id = row['id']
+                    atom_id_cont = 1
+                    sugar_atom_dict = {row["label_atom_id"]: str(atom_id_cont)}
+
+                    write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
+
+                else:
+                    #Verifica se é a última linha
+                    if(index == len(hetatm_df.index) - 1):
+                        atom_id_cont += 1
+                        write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
+                        sugar_atom_dict[row["label_atom_id"]] = str(atom_id_cont)
+                        #criar .dat e run bash
+                        ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
+                        colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
+                        #roda plumed driver com o dat criado
+                        run_puck(colvar_name)
+                        
+                        return 0
+
+                    #Verifica se é o próximo açúcar
+                    if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
+                        #criar .dat e run bash
+                        ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
+                        colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
+                        #roda plumed driver com o dat criado
+                        run_puck(colvar_name)
+
+                        sugar_atom_dict = {}
+                        iter_sugar = row["label_comp_id"]
+                        iter_first_atom_id = row["id"]
+                        atom_id_cont = 0
+                    
                     atom_id_cont += 1
                     write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
                     sugar_atom_dict[row["label_atom_id"]] = str(atom_id_cont)
-                    #criar .dat e run bash
-                    ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
-                    colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
-                    #roda plumed driver com o dat criado
-                    run_puck(colvar_name)
-                    
-                    return 0
-
-                #Verifica se é o próximo açúcar
-                if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
-                    #criar .dat e run bash
-                    ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
-                    colvar_name = alter_dat(sugar_atom_dict, ring_type, fileName, iter_sugar, iter_first_atom_id)
-                    #roda plumed driver com o dat criado
-                    run_puck(colvar_name)
-
-                    sugar_atom_dict = {}
-                    iter_sugar = row["label_comp_id"]
-                    iter_first_atom_id = row["id"]
-                    atom_id_cont = 0
-                
-                atom_id_cont += 1
-                write_sugar_line_pdb(fileName, row, iter_sugar, iter_first_atom_id, str(atom_id_cont))
-                sugar_atom_dict[row["label_atom_id"]] = str(atom_id_cont)
-    except:
-        pass
+        except:
+            return None
+    except Exception as e:
+        # Registra o erro em um log específico para esta função
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/separate_sugars_errors.txt", "a") as f:
+            f.write(f"Error processing {fileName}: {str(e)}\n")
+        return None
+    
 
 if __name__ == '__main__':
 
