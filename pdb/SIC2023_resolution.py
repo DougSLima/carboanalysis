@@ -318,6 +318,106 @@ def bfactor_values(fileName):
     entry_df = pd.DataFrame(data = entry_dict)
     entry_df.to_csv(path_or_buf="/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/SIC/bfactors.csv", mode='a', index=False, header=False, sep=";")
 
+#Retorna a média do bfactor da proteína
+def polymer_bfactor_mean(file_path):
+
+    mmcif_dict = MMCIF2Dict(file_path)#_atom_site.B_iso_or_equiv
+    
+    # atom_group = mmcif_dict['_atom_site.group_PDB']
+    # atom_site_id = mmcif_dict['_atom_site.id'] 
+    # atom_comp_id = mmcif_dict['_atom_site.label_comp_id']
+    # atom_label_id = mmcif_dict['_atom_site.label_atom_id']
+    # bfactors = mmcif_dict['_atom_site.B_iso_or_equiv']
+    # entity_id = mmcif_dict['_atom_site.label_entity_id']
+    # entity_seq_num = mmcif_dict['_atom_site.label_seq_id']
+    
+    # junta os dataframes dos monossacarídeos
+    atom_df_dict = {"group": mmcif_dict['_atom_site.group_PDB'], "atom_id": mmcif_dict['_atom_site.id'], 
+                    "comp":  mmcif_dict['_atom_site.label_comp_id'], "atom_symbol": mmcif_dict["_atom_site.type_symbol"], 
+                    "atom_label": mmcif_dict['_atom_site.label_atom_id'], "bfactors": mmcif_dict['_atom_site.B_iso_or_equiv'], "entity_id": mmcif_dict['_atom_site.label_entity_id'],
+                    "entity_seq_num": mmcif_dict['_atom_site.label_seq_id']}
+    atom_df = pd.DataFrame(data = atom_df_dict)
+
+    atom_df['bfactors'] = atom_df["bfactors"].astype(float)
+    #pega oligossacarideos se existem e mantém somente os ids unicos
+
+    polymer_mean = atom_df.loc[atom_df['group'] == 'ATOM']["bfactors"].mean()
+
+    return polymer_mean
+
+#Retorna a média do bfactor do açúcar
+def sugar_bfactor_mean(file_path, sugar, first_atom):
+    
+    mmcif_dict = MMCIF2Dict(file_path)#_atom_site.B_iso_or_equiv
+    
+    # atom_group = mmcif_dict['_atom_site.group_PDB']
+    # atom_site_id = mmcif_dict['_atom_site.id'] 
+    # atom_comp_id = mmcif_dict['_atom_site.label_comp_id']
+    # atom_label_id = mmcif_dict['_atom_site.label_atom_id']
+    # bfactors = mmcif_dict['_atom_site.B_iso_or_equiv']
+    # entity_id = mmcif_dict['_atom_site.label_entity_id']
+    # entity_seq_num = mmcif_dict['_atom_site.label_seq_id']
+    
+    # junta os dataframes dos monossacarídeos
+    atom_df_dict = {"group": mmcif_dict['_atom_site.group_PDB'], 
+                    "atom_id": mmcif_dict['_atom_site.id'], 
+                    "comp":  mmcif_dict['_atom_site.label_comp_id'], 
+                    "atom_symbol": mmcif_dict["_atom_site.type_symbol"], 
+                    "atom_label": mmcif_dict['_atom_site.label_atom_id'], 
+                    "bfactors": mmcif_dict['_atom_site.B_iso_or_equiv'], 
+                    "entity_id": mmcif_dict['_atom_site.label_entity_id'],
+                    "entity_seq_num": mmcif_dict['_atom_site.label_seq_id'],
+                    "auth_seq_id": mmcif_dict['_atom_site.auth_seq_id']}
+    atom_df = pd.DataFrame(data = atom_df_dict)
+
+    #Converte os valores de bfactor pra float
+    atom_df['bfactors'] = atom_df["bfactors"].astype(float)
+    atom_df['atom_id'] = atom_df["atom_id"].astype(int)
+
+    #Separa os hetero atomos
+    hetatm_df = atom_df.loc[atom_df['group'] == 'HETATM']
+
+    #Remove as moléculas de água
+    hetatm_df = hetatm_df.loc[hetatm_df['comp'] != 'HOH']
+
+    #Separa so os carboidratos
+    carbo_dict = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dicts/CCD_carbohydrate_list.tsv", sep = "\t", header = None, names = ['carbo_id', 'release_status'])
+    carbo_list = carbo_dict["carbo_id"].values
+    hetatm_df = hetatm_df.loc[hetatm_df['comp'].isin(carbo_list)]
+
+    #reseta os index
+    hetatm_df = hetatm_df.reset_index()
+
+    #Filtra df com o nome e o número do primeiro átomo do açúcar
+    filtered_df = hetatm_df[hetatm_df['atom_id'] >= first_atom]
+    filtered_df = filtered_df[filtered_df['comp'] >= sugar]
+    filtered_df = filtered_df.reset_index()
+
+    #Itera os açúcares e escreve um arquivo no formato pdb pra cada um deles
+    for index, row in filtered_df.iterrows():
+        if(index == 0):
+            iter_auth_seq_id = row["auth_seq_id"]
+            iter_sugar = row["comp"]
+            bfactor_acm = row["bfactors"]
+            atom_cont = 1
+        else:
+            #Verifica se mudou de açúcar
+            if(row["comp"] != iter_sugar or row["auth_seq_id"] != iter_auth_seq_id):
+                bfactor_acm += row["bfactors"]
+                atom_cont += 1
+                sugar_mean = bfactor_acm/atom_cont if atom_cont > 0 else 0
+                return sugar_mean
+            
+            #Verifica se é a última linha
+            if(index == len(filtered_df.index) - 1):
+                bfactor_acm += row["bfactors"]
+                atom_cont += 1
+                sugar_mean = bfactor_acm/atom_cont if atom_cont > 0 else 0
+                return sugar_mean
+            
+            bfactor_acm += row["bfactors"]
+            atom_cont += 1
+
 #Coleta os dados das ligações glicosídicas
 def find_linkages(fileName):
     
@@ -382,7 +482,7 @@ def find_linkages(fileName):
 def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id, new_atom_id):
     #print(row)
     try:
-        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as f:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as f:
             # Formatar a linha de acordo com o padrão PDB
             pdb_line = "{:<6}{:>5} {:<4} {:<3} {:>1}{:>4}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}          {:<2}".format(
                 row['group'], new_atom_id, row['label_atom_id'], row['label_comp_id'], row['label_asym_id'], row['label_entity_id'],
@@ -598,10 +698,11 @@ def separate_sugars(fileName):
             f.write("Exception in " + fileName + ": " + str(e) + "\n")
         return None
 
+#Adiciona comentário no PDB
 def add_remarks(ring_atoms, fileName, sugar, sugar_first_id):
-    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_sugars/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as file:
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as file:
         file.write(f"REMARK 1 {ring_atoms}\n")
-
+#Retorna a lista de átomos do anel
 def ring_atoms_identifier(atoms_dict, ring_type, fileName):
     if(ring_type == "pyranose"):
         try:
@@ -615,7 +716,7 @@ def ring_atoms_identifier(atoms_dict, ring_type, fileName):
             return o5 + "," + c1 + "," + c2 + "," + c3 + "," + c4 + "," + c5
         
         except Exception as e:
-            with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros_onlyV2.txt', 'a') as f:
+            with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros_onlyV22.txt', 'a') as f:
                 f.write("Exception: pyranose => " + fileName +  "\n")
             return None
 
@@ -630,12 +731,87 @@ def ring_atoms_identifier(atoms_dict, ring_type, fileName):
             return c4 + "," + o4 + "," + c1 + "," + c2 + "," + c3
         
         except Exception as e:
-            with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros_onlyV2.txt', 'a') as f:
+            with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros_onlyV22.txt', 'a') as f:
                 f.write("Exception: pyranose => " + fileName +  "\n")
             return None
     else:
         print('nada')
+
+def read_remmarks(fileName, remark_number):
+    comments = []
+    remark_prefix = f"REMARK {remark_number}"
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + fileName, 'r') as file:
+        for line in file:
+            if line.startswith(remark_prefix):
+                comments.append(line.strip())
+    return comments
+
+def parse_pdb_line(line):
+    return {
+        'group': line[0:6].strip(),
+        'atom_id': int(line[6:11].strip()),
+        'label_atom_id': line[12:16].strip(),
+        'label_comp_id': line[17:20].strip(),
+        'label_asym_id': line[21].strip(),
+        'label_entity_id': line[22:26].strip(),
+        'Cartn_x': float(line[30:38].strip()),
+        'Cartn_y': float(line[38:46].strip()),
+        'Cartn_z': float(line[46:54].strip()),
+        'occupancy': float(line[54:60].strip()),
+        'B_iso_or_equiv': float(line[60:66].strip()),
+        'type_symbol': line[76:78].strip()
+    }
+
+def read_pdb_to_dataframe(file_path):
+    data = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith(('ATOM', 'HETATM')):
+                parsed_line = parse_pdb_line(line)
+                data.append(parsed_line)
+    return pd.DataFrame(data)
+
+def puck_subprocess(fileName):
+    try:
+        #Comando a ser executado
+        command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_debug2/" + fileName
+        # Executar o comando e capturar a saída
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    except Exception as e:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/puckering_log.txt", "a") as f:
+            f.write("PUCK SUBPROCESS Exception in " + fileName + ": " + str(e) + "\n")
+        return None
+
+def bfactor_mean(pdb_name):
+    #Fazer cálculo de bfactor separado
+    pdb_df = read_pdb_to_dataframe("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + pdb_name)
+
+    bfactor_mean = pdb_df['B_iso_or_equiv'].mean()
+    try:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/bfactors.txt", "a") as f:
+            f.write(f"{pdb_name},{bfactor_mean}\n")
+    except Exception as e:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/puckering_log.txt", "a") as f:
+            f.write("BFACTOR CALC Exception in " + pdb_name + ": " + str(e) + "\n")
+
+def puck_calcs(fileName):
+    try:
+        remmarks = read_remmarks(fileName, 1)
+        remmark = remmarks[0]
+        ring_atoms = remmark[9:]
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", "w") as f:
+            f.write("#plumed.dat \n" +
+                    "puck: PUCKERING ATOMS="+ ring_atoms + "\n" + 
+                    "PRINT ARG=puck.* FILE=/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/colvar/" + fileName[:-4])
         
+        puck_subprocess(fileName)
+    except Exception as e:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/only_calc_puck_errors.txt", "a") as f:
+                    f.write("PUCK_CALCS Error in "+ fileName +": " + e)
+
+
+
+#Separa os monossacarídeos  
 def only_separate_sugars(fileName):
     try:
         os.chdir("/home/douglas/carboanalysis/data/unzipped")
@@ -733,14 +909,16 @@ def only_separate_sugars(fileName):
                             sugar_atom_dict[row["label_atom_id"]] = str(atom_id_cont)
                 except Exception as e:
                     # Registra o erro em um log específico para esta função
-                    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/separate_sugars_errors_only.txt", "a") as f:
+                    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/separate_sugars_errors_only22.txt", "a") as f:
                         f.write("Exception in " + fileName + ": " + str(e) + "\n")
                     return None
     except Exception as e:
         # Registra o erro em um log específico para esta função
-        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/separate_sugars_errors_only.txt", "a") as f:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/separate_sugars_errors_only22.txt", "a") as f:
             f.write("Exception in " + fileName + ": " + str(e) + "\n")
         return None
+
+
 
 if __name__ == '__main__':
 
