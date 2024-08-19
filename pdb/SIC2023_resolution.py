@@ -479,23 +479,49 @@ def find_linkages(fileName):
     except KeyError as error:
         return None
 
+# def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id, new_atom_id):
+#     #print(row)
+#     try:
+#         with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug3/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as f:
+#             # Formatar a linha de acordo com o padrão PDB
+#             pdb_line = "{:<6}{:>5} {:<4} {:<3} {:>1}{:>4}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}          {:<2}".format(
+#                 row['group'], new_atom_id, row['label_atom_id'], row['label_comp_id'], row['label_asym_id'], row['label_entity_id'],
+#                 row['Cartn_x'], row['Cartn_y'], row['Cartn_z'], row['occupancy'], row['B_iso_or_equiv'],
+#                 row['type_symbol']
+#             )
+#             f.write(pdb_line + '\n')
+#     except Exception as e:
+#         with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
+#             f.write("Exception in " + fileName + ": " + str(e) + "\n")
+    
+#         return None
+
+#Debug3       
 def write_sugar_line_pdb(fileName, row, sugar, sugar_first_id, new_atom_id):
-    #print(row)
     try:
-        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as f:
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_res_OWAB_filtered_sugars/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as f:
             # Formatar a linha de acordo com o padrão PDB
-            pdb_line = "{:<6}{:>5} {:<4} {:<3} {:>1}{:>4}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}          {:<2}".format(
-                row['group'], new_atom_id, row['label_atom_id'], row['label_comp_id'], row['label_asym_id'], row['label_entity_id'],
-                row['Cartn_x'], row['Cartn_y'], row['Cartn_z'], row['occupancy'], row['B_iso_or_equiv'],
-                row['type_symbol']
+            pdb_line = "{:<6}{:>5} {:<4}{:<3} {:<2}{:>4}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}          {:>2}".format(
+                row['group'],            # 'HETATM'
+                new_atom_id,             # Número serial do átomo
+                row['label_atom_id'],    # Nome do átomo
+                row['label_comp_id'],    # Nome do resíduo
+                row['label_asym_id'],    # ID da cadeia
+                row['label_entity_id'],  # Número da sequência do resíduo
+                row['Cartn_x'],          # Coordenada x
+                row['Cartn_y'],          # Coordenada y
+                row['Cartn_z'],          # Coordenada z
+                row['occupancy'],        # Ocupação
+                row['B_iso_or_equiv'],   # Fator de temperatura
+                row['type_symbol']       # Elemento químico
             )
+
             f.write(pdb_line + '\n')
     except Exception as e:
         with open('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/log_de_erros.txt', 'a') as f:
             f.write("Exception in " + fileName + ": " + str(e) + "\n")
     
         return None
-        
 
 def is_piranose_or_furanose(sugar_id, mmcif_dict):
     try:
@@ -503,11 +529,11 @@ def is_piranose_or_furanose(sugar_id, mmcif_dict):
         chem_comp_df = pd.DataFrame(data = chem_comp_dict)
 
         if("pyranose" in chem_comp_df[chem_comp_df.comp_id == sugar_id]["name"].values[0]):
-            print("pyr")
+            #print("pyr")
             return "pyranose"
 
         elif("furanose" in chem_comp_df[chem_comp_df.comp_id == sugar_id]["name"].values[0]):
-            print("fur")
+            #print("fur")
             return "furanose"
     except Exception as e:
         with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/puckering_log.txt", "a") as f:
@@ -700,7 +726,7 @@ def separate_sugars(fileName):
 
 #Adiciona comentário no PDB
 def add_remarks(ring_atoms, fileName, sugar, sugar_first_id):
-    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as file:
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_res_OWAB_filtered_sugars/" + fileName[:4] + "_" + sugar + "_" + sugar_first_id + ".pdb", "a") as file:
         file.write(f"REMARK 1 {ring_atoms}\n")
 #Retorna a lista de átomos do anel
 def ring_atoms_identifier(atoms_dict, ring_type, fileName):
@@ -712,7 +738,7 @@ def ring_atoms_identifier(atoms_dict, ring_type, fileName):
             c3 = atoms_dict['C3']
             c4 = atoms_dict['C4']
             c5 = atoms_dict['C5']
-            print(atoms_dict)
+            #print(atoms_dict)
             return o5 + "," + c1 + "," + c2 + "," + c3 + "," + c4 + "," + c5
         
         except Exception as e:
@@ -727,7 +753,7 @@ def ring_atoms_identifier(atoms_dict, ring_type, fileName):
             c1 = atoms_dict['C1']
             c2 = atoms_dict['C2']
             c3 = atoms_dict['C3']
-            print(atoms_dict)
+            #print(atoms_dict)
             return c4 + "," + o4 + "," + c1 + "," + c2 + "," + c3
         
         except Exception as e:
@@ -740,7 +766,7 @@ def ring_atoms_identifier(atoms_dict, ring_type, fileName):
 def read_remmarks(fileName, remark_number):
     comments = []
     remark_prefix = f"REMARK {remark_number}"
-    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_debug2/" + fileName, 'r') as file:
+    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/pdb_res_OWAB_filtered_sugars/" + fileName, 'r') as file:
         for line in file:
             if line.startswith(remark_prefix):
                 comments.append(line.strip())
@@ -774,7 +800,7 @@ def read_pdb_to_dataframe(file_path):
 def puck_subprocess(fileName):
     try:
         #Comando a ser executado
-        command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_debug2/" + fileName
+        command = "plumed driver --plumed puck.dat --mf_pdb ../pdb_res_OWAB_filtered_sugars/" + fileName
         # Executar o comando e capturar a saída
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
     except Exception as e:
@@ -802,7 +828,7 @@ def puck_calcs(fileName):
         with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/puck.dat", "w") as f:
             f.write("#plumed.dat \n" +
                     "puck: PUCKERING ATOMS="+ ring_atoms + "\n" + 
-                    "PRINT ARG=puck.* FILE=/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/colvar/" + fileName[:-4])
+                    "PRINT ARG=puck.* FILE=/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/puckering/colvar_res_OWAB_filtered/" + fileName[:-4])
         
         puck_subprocess(fileName)
     except Exception as e:
@@ -819,7 +845,7 @@ def only_separate_sugars(fileName):
         if not os.path.isfile(fileName):
             raise FileNotFoundError(f"File not found: {fileName}")
 
-        print("Separating sugars: " + fileName)
+        #print("Separating sugars: " + fileName)
         
         #Cria um dicionário a partir do arquivo .cif
         mmcif_dict = MMCIF2Dict(fileName)
@@ -839,7 +865,9 @@ def only_separate_sugars(fileName):
                                     "occupancy": mmcif_dict['_atom_site.occupancy'],
                                     "B_iso_or_equiv": mmcif_dict['_atom_site.B_iso_or_equiv'],
                                     "type_symbol": mmcif_dict['_atom_site.type_symbol'],
-                                    "auth_seq_id": mmcif_dict['_atom_site.auth_seq_id']}
+                                    "auth_seq_id": mmcif_dict['_atom_site.auth_seq_id'],
+                                    "label_asym_id": mmcif_dict['_atom_site.label_asym_id'],
+                                    "auth_asym_id": mmcif_dict['_atom_site.auth_asym_id']}
                     #Cria o dataframe de átomos
                     atom_df = pd.DataFrame(data = atom_dict)
 
@@ -868,6 +896,8 @@ def only_separate_sugars(fileName):
                             iter_sugar = row["label_comp_id"]
                             iter_first_atom_id = row['id']
                             iter_auth_seq_id = row['auth_seq_id']
+                            iter_label_asym_id = row['label_asym_id']
+                            iter_auth_asym_id = row['auth_asym_id']
                             atom_id_cont = 1
                             sugar_atom_dict = {row["label_atom_id"]: str(atom_id_cont)}
 
@@ -890,7 +920,7 @@ def only_separate_sugars(fileName):
 
                             #Verifica se é o próximo açúcar
                             #if(row["label_comp_id"] != iter_sugar or row["label_atom_id"] == 'C1'):
-                            if(row["label_comp_id"] != iter_sugar or row["auth_seq_id"] != iter_auth_seq_id):
+                            if((row["label_comp_id"] != iter_sugar) or (row["auth_seq_id"] != iter_auth_seq_id) or (row['label_asym_id'] != iter_label_asym_id) or (row['auth_asym_id'] != iter_auth_asym_id)):
                                 #Separa e adiciona comentário
                                 ring_type = is_piranose_or_furanose(iter_sugar, mmcif_dict)
                                 
@@ -902,6 +932,8 @@ def only_separate_sugars(fileName):
                                 iter_sugar = row["label_comp_id"]
                                 iter_first_atom_id = row["id"]
                                 iter_auth_seq_id = row['auth_seq_id']
+                                iter_label_asym_id = row['label_asym_id']
+                                iter_auth_asym_id = row['auth_asym_id']
                                 atom_id_cont = 0
                             
                             atom_id_cont += 1
