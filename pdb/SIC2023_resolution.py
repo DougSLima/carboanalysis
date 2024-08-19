@@ -950,15 +950,15 @@ def only_separate_sugars(fileName):
             f.write("Exception in " + fileName + ": " + str(e) + "\n")
         return None
 
-def ramification(fileName):
+def ramification_find(fileName):
     
-    print("B - factor values: " + fileName)
+    print("Ramification: " + fileName)
 
     mmcif_dict = MMCIF2Dict(fileName)
 
     entity_dict = {"id": mmcif_dict['_entity.id'], 
                    "type": mmcif_dict['_entity.type'], 
-                   "description": mmcif_dict['_struct_conn.ptnr1_auth_seq_id'], 
+                   "description": mmcif_dict['_entity.pdbx_description'], 
                     "number_of_molecules": mmcif_dict['_entity.pdbx_number_of_molecules']}
     
     entity_df = pd.DataFrame(data = entity_dict)
@@ -969,9 +969,11 @@ def ramification(fileName):
         if('[' in row['description'] or ']' in row['description']):
             # Cria um DataFrame temporário para a linha atual
             linha = pd.DataFrame([row])
-
+            linha['entry'] = mmcif_dict['_entry.id']
             # Escreve a linha no arquivo CSV. Usa mode='a' para adicionar ao arquivo se já existir.
             linha.to_csv('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/ramifications.csv', mode='a', header=False, index=False)
+
+
 
 if __name__ == '__main__':
 
@@ -1009,7 +1011,7 @@ if __name__ == '__main__':
         # results = [i for i in pool.map(bfactor_values, fileNames) if i is not None]
         # print("Bfactor parsing Done!")
         print("Linkage...")
-        results = [i for i in pool.map(find_linkages, fileNames) if i is not None]
+        #   results = [i for i in pool.map(find_linkages, fileNames) if i is not None]
         print("Linkage parsing Done!")
 
     print("thread time: ", time.time() - start)
