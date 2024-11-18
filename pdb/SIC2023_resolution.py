@@ -973,6 +973,10 @@ def ramification_find(fileName):
             # Escreve a linha no arquivo CSV. Usa mode='a' para adicionar ao arquivo se já existir.
             linha.to_csv('/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/ramifications.csv', mode='a', header=False, index=False)
 
+def get_resolution(entry_id):
+    
+    mmcif_dict = MMCIF2Dict(entry_id + ".cif")
+    return float(mmcif_dict["_refine.ls_d_res_high"][0])
 
 
 if __name__ == '__main__':
@@ -984,6 +988,7 @@ if __name__ == '__main__':
     #df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/carbo_entrys_res_owab_filtered_nd.txt", names = ['entry_filename'])
     df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/SIC/SIC2023_carbo_entrys_res_owab_filtered.txt", names = ['entry_filename'])
 
+       
     fileNames = df['entry_filename'].values
 
     os.chdir("/home/douglas/carboanalysis/data/unzipped")
