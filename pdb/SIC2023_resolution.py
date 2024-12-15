@@ -978,6 +978,72 @@ def get_resolution(entry_id):
     mmcif_dict = MMCIF2Dict(entry_id + ".cif")
     return float(mmcif_dict["_refine.ls_d_res_high"][0])
 
+def get_sugar_info(sugar_id, output_path):
+    
+    parts = sugar_id.split('_')
+    
+    file_name = parts[0] + '.cif'
+    comp_id = parts[1]
+    atom_id = parts[2]
+
+    mmcif_dict = MMCIF2Dict(file_name)
+
+    try:
+        #entity informations
+        entity_dict = {"id": mmcif_dict['_entity.id'], 
+                        "type": mmcif_dict['_entity.type'], 
+                        "description": mmcif_dict['_entity.pdbx_description'], 
+                        "number_of_molecules": mmcif_dict['_entity.pdbx_number_of_molecules']}
+        
+        entity_df = pd.DataFrame(data = entity_dict)
+
+        #Atom information
+        atom_dict = {'id': mmcif_dict['_atom_site.id'],
+                            'entity_id':  mmcif_dict['_atom_site.label_entity_id'],
+                            'seq_id': mmcif_dict['_atom_site.auth_seq_id']}
+                 
+        atom_df = pd.DataFrame(data = atom_dict)
+
+        #Coleta informações de nomenclatura dos açúcares
+        identifier_dict = {"comp_id": mmcif_dict['_pdbx_chem_comp_identifier.comp_id'], 
+                        "type": mmcif_dict['_pdbx_chem_comp_identifier.type'], 
+                        "identifier":  mmcif_dict['_pdbx_chem_comp_identifier.identifier']}
+        
+        #Transforma num dataframe pandas
+        identifier_df = pd.DataFrame(data = identifier_dict)
+
+        atom_df = atom_df.loc[atom_df['id'] == atom_id]
+
+        #Sugar entity id
+        entity_id = atom_df['entity_id'].values[0]
+        #Sugar seq_id
+        seq_id = atom_df['seq_id'].values[0]
+
+        #Get sugar entity information
+        
+        entity_df = entity_df.loc[entity_df['id'] == entity_id]
+
+        entity_type = entity_df['type'].values[0]
+        entity_description = entity_df['description'].values[0]
+
+        #iupac name
+        identifier_df = identifier_df.loc[identifier_df['comp_id'] == comp_id]
+        iupac_name = identifier_df.loc[identifier_df['type'] == 'IUPAC CARBOHYDRATE SYMBOL']['identifier'].values[0]
+
+        #Linha pro csv
+        colnames = ['id', 'entity_id', 'seq_id', 'entity_type', 'entity_description', 'iupac_name']
+        data = pd.DataFrame([sugar_id, entity_id, seq_id, entity_type, entity_description, iupac_name], columns=colnames)
+
+        #Salva no arquivo
+        data.to_csv(output_path, mode='a', index=False, header=not pd.io.common.file_exists(output_path))
+
+        return file_name
+    except Exception as e:
+    # Registra o erro em um log específico para esta função
+        with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_sugar_info.txt", "a") as f:
+            f.write("Exception in " + file_name + ": " + str(e) + "\n")
+        return None
+
 
 if __name__ == '__main__':
 
