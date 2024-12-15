@@ -1032,7 +1032,7 @@ def get_sugar_info(sugar_id, output_path):
 
         #Linha pro csv
         colnames = ['id', 'entity_id', 'seq_id', 'entity_type', 'entity_description', 'iupac_name']
-        data = pd.DataFrame([sugar_id, entity_id, seq_id, entity_type, entity_description, iupac_name], columns=colnames)
+        data = pd.DataFrame([[sugar_id, entity_id, seq_id, entity_type, entity_description, iupac_name]], columns=colnames)
 
         #Salva no arquivo
         data.to_csv(output_path, mode='a', index=False, header=not pd.io.common.file_exists(output_path))
