@@ -976,7 +976,9 @@ def ramification_find(fileName):
 def get_resolution(entry_id):
     
     mmcif_dict = MMCIF2Dict(entry_id + ".cif")
-    return float(mmcif_dict["_refine.ls_d_res_high"][0])
+
+    if '_refine.ls_d_res_high' in mmcif_dict.keys():
+        return float(mmcif_dict["_refine.ls_d_res_high"][0])
 
 def get_sugar_info(sugar_id, output_path):
     
