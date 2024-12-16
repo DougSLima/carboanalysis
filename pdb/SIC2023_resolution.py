@@ -1035,7 +1035,7 @@ def get_sugar_info(sugar_id, output_path):
         data = pd.DataFrame([[sugar_id, entity_id, seq_id, entity_type, entity_description, iupac_name]], columns=colnames)
 
         #Salva no arquivo
-        data.to_csv(output_path, mode='a', index=False, header=not pd.io.common.file_exists(output_path))
+        data.to_csv(output_path, mode='a', sep=';', index=False, header=not pd.io.common.file_exists(output_path))
 
         return file_name
     except Exception as e:
