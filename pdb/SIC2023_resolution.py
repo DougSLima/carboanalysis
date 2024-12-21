@@ -980,6 +980,44 @@ def get_resolution(entry_id):
     if '_refine.ls_d_res_high' in mmcif_dict.keys():
         return float(mmcif_dict["_refine.ls_d_res_high"][0])
 
+def get_resolution_all(entry_id):
+    
+    mmcif_dict = MMCIF2Dict(entry_id + ".cif")
+
+    #Cristalografia
+    if '_exptl.method' in mmcif_dict.keys():
+        if mmcif_dict['_exptl.method'][0] in ('X-RAY DIFFRACTION', 'FIBER DIFFRACTION', 'SOLUTION SCATTERING', 'ELECTRON CRYSTALLOGRAPHY', 'NEUTRON DIFFRACTION'):
+            if '_refine.ls_d_res_high' in mmcif_dict.keys():
+                try:                    
+                    return mmcif_dict["_refine.ls_d_res_high"][0]
+                except Exception as e:
+                    # Registra o erro em um log específico para esta função
+                    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_resolution_log.txt", "a") as f:
+                        f.write("Exception in " + entry_id + " - res: " + mmcif_dict["_refine.ls_d_res_high"][0] + ": " + str(e) + "\n")
+                    return None
+        elif mmcif_dict['_exptl.method'][0] in ('ELECTRON MICROSCOPY'):
+            #_em_3d_reconstruction.resolution
+            if '_em_3d_reconstruction.resolution' in mmcif_dict.keys():
+                try:                    
+                    return mmcif_dict["_em_3d_reconstruction.resolution"][0]
+                except Exception as e:
+                    # Registra o erro em um log específico para esta função
+                    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_resolution_log.txt", "a") as f:
+                        f.write("Exception in " + entry_id + " - res: " + mmcif_dict["_em_3d_reconstruction.resolution"][0] + ": " + str(e) + "\n")
+                    return None
+        elif mmcif_dict['_exptl.method'][0] in ('POWDER DIFFRACTION'):
+            #_reflns.d_resolution_high
+            if '_reflns.d_resolution_high' in mmcif_dict.keys():
+                try:                    
+                    return mmcif_dict["_reflns.d_resolution_high"][0]
+                except Exception as e:
+                    # Registra o erro em um log específico para esta função
+                    with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_resolution_log.txt", "a") as f:
+                        f.write("Exception in " + entry_id + " - res: " + mmcif_dict["_reflns.d_resolution_high"][0] + ": " + str(e) + "\n")
+                    return None
+        else:
+            return -1
+        
 def get_sugar_info(sugar_id, output_path):
     
     parts = sugar_id.split('_')
