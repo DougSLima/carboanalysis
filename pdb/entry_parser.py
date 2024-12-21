@@ -94,15 +94,67 @@ def get_branched(entry_id):
 
     if '_entity.type' in mmcif_dict.keys():
         try:
-            
+            entity_dict = {"entity_id": mmcif_dict['_entity.id'], 
+                    "type": mmcif_dict['_entity.type'], 
+                   "description": mmcif_dict['_entity.pdbx_description'], 
+                    "n_of_molecules": mmcif_dict['_entity.pdbx_number_of_molecules']}
 
-            return len(mmcif_dict["_entity_poly_seq.entity_id"])
+            entity_df = pd.DataFrame(data=entity_dict)
+            entity_df['entry_id'] = entry_id
+            entity_df = entity_df.loc[entity_df['type'] == 'branched']
+
+            if entity_df.empty:
+                pass
+            else: 
+                entity_df.to_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/final_analysis/branched.csv", header=None, sep=';', mode='a')
+
+            return entity_df
         except Exception as e:
             # Registra o erro em um log específico para esta função
-            with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_poly_length_log.txt", "a") as f:
-                f.write("Exception in " + entry_id + " - res: " + mmcif_dict["_entity_poly_seq.entity_id"] + ": " + str(e) + "\n")
+            with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_branched_log.txt", "a") as f:
+                f.write("Exception in " + entry_id + " - res: " + str(e) + "\n")
             return None
 
+def get_oligos(entry_id):
+
+    mmcif_dict = MMCIF2Dict(entry_id + ".cif")
+
+    if '_pdbx_entity_branch_list.entity_id' in mmcif_dict.keys():
+        try:
+            oligo_dict = {"entity_id": mmcif_dict["_pdbx_entity_branch_list.entity_id"], 
+                    "comp_id": mmcif_dict["_pdbx_entity_branch_list.comp_id"], 
+                   "num": mmcif_dict["_pdbx_entity_branch_list.num"]}
+
+            oligo_df = pd.DataFrame(data=oligo_dict)
+
+            oligo_df['entry_id'] = entry_id
+
+            oligo_df['num'] = pd.to_numeric(oligo_df['num'])
+
+            result_df = oligo_df.groupby('entity_id', as_index=False)['num'].max()
+
+            branched_df = get_branched(entry_id)
+            
+            if branched_df.empty:
+                return None
+
+            branched_df = branched_df[['entity_id', 'n_of_molecules']]
+
+            result_df = result_df.merge(branched_df, how='left', left_on='entity_id', right_on='entity_id')
+            result_df['entry_id'] = entry_id 
+            result_df = result_df[['entry_id', 'entity_id', 'num', 'n_of_molecules']]
+            
+            return result_df
+        except Exception as e:
+            # Registra o erro em um log específico para esta função
+            with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_oligo_log.txt", "a") as f:
+                f.write("Exception in " + entry_id + " - res: " + str(e) + "\n")
+            return None
+
+def write_oligos(entry_id):
+    oligo_df = get_oligos(entry_id)
+    if oligo_df is not None:
+        oligo_df.to_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/final_analysis/oligos.csv", header=None, sep=';', mode='a')
 
 
 if __name__ == "__main__":
@@ -125,9 +177,15 @@ if __name__ == "__main__":
         #     if result is not None:
         #         results.append(result)
         # print("Done!")
-        print("Organism and PolyChainSize info...")
+        # print("Organism and PolyChainSize info...")
+        # results = []
+        # for result in tqdm(pool.imap(write_org_polysize, fileNames), total=len(fileNames)):
+        #     if result is not None:
+        #         results.append(result)
+        # print("Done!")
+        print("Get oligo...")
         results = []
-        for result in tqdm(pool.imap(write_org_polysize, fileNames), total=len(fileNames)):
+        for result in tqdm(pool.imap(write_oligos, fileNames), total=len(fileNames)):
             if result is not None:
                 results.append(result)
         print("Done!")
