@@ -156,6 +156,50 @@ def write_oligos(entry_id):
     if oligo_df is not None:
         oligo_df.to_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/final_analysis/oligos.csv", header=None, sep=';', mode='a')
 
+def get_ramifications():
+
+    names = ['entry_id', 'entity_id', 'num', 'n_of_molecules']
+    oligo_df = pd.read_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/final_analysis/oligos.csv", header=None, sep=';', names = names)
+
+    for index, row in oligo_df.iterrows():
+        try: 
+            mmcif_dict = MMCIF2Dict(row['entry_id'] + ".cif")
+
+            if '_pdbx_entity_branch_link.link_id' in mmcif_dict.keys():
+                branch_link_dict = {"entity_id": mmcif_dict["_pdbx_entity_branch_link.entity_id"], 
+                    "num_1": mmcif_dict["_pdbx_entity_branch_link.entity_branch_list_num_1"], 
+                   "comp_id_1": mmcif_dict["_pdbx_entity_branch_link.comp_id_1"],
+                   "num_2": mmcif_dict["_pdbx_entity_branch_link.entity_branch_list_num_2"], 
+                   "comp_id_2": mmcif_dict["_pdbx_entity_branch_link.comp_id_2"]}
+
+                branch_link_df = pd.DataFrame(data=branch_link_dict)
+                #Seleciona somente a entity_id de entrada
+                branch_link_df['entity_id'] = branch_link_df['entity_id'].astype(int)
+
+                branch_link_df = branch_link_df.loc[branch_link_df['entity_id'] == row['entity_id']]
+                
+                branch_link_df['col1'] = branch_link_df['num_1'] + branch_link_df['comp_id_1']  
+                branch_link_df['col2'] = branch_link_df['num_2'] + branch_link_df['comp_id_2']
+                
+                comps = list(branch_link_df['col1'].values) + list(branch_link_df['col2'].values)
+                comps = pd.Series(comps)
+                comps = comps.value_counts()
+                count_gte_3 = (comps >= 3).sum()
+                if(count_gte_3 > 0):
+                    ram_df = pd.DataFrame([[row['entry_id'], row['entity_id'], row['num'], row['n_of_molecules'], True, count_gte_3]],
+                    columns=['entry_id', 'entity_id', 'num', 'n_of_molecules', 'ramification', 'n_of_ramifications'])
+                    ram_df.to_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/final_analysis/ramifications.csv", header=None, sep=';', mode='a')
+                else:
+                    ram_df = pd.DataFrame([[row['entry_id'], row['entity_id'], row['num'], row['n_of_molecules'], False, 0]],
+                    columns=['entry_id', 'entity_id', 'num', 'n_of_molecules', 'ramification', 'n_of_ramifications'])
+                    ram_df.to_csv("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/final_analysis/ramifications.csv", header=None, sep=';', mode='a')
+
+        except Exception as e:
+            # Registra o erro em um log específico para esta função
+            with open("/home/douglas/carboanalysis/carboanalysis/pdb/dataframes/logs/get_ramifications_log.txt", "a") as f:
+                f.write("Exception in " + row['entry_id'] + " - res: " + str(e) + "\n")
+            return None
+
 
 if __name__ == "__main__":
 
@@ -164,7 +208,7 @@ if __name__ == "__main__":
 
     os.chdir("/home/douglas/carboanalysis/data/unzipped")
 
-    with Pool() as pool:
+    # with Pool() as pool:
         # print("Entry info...")
         # results = []
         # for result in tqdm(pool.imap(parse_entry, fileNames), total=len(fileNames)):
@@ -183,10 +227,11 @@ if __name__ == "__main__":
         #     if result is not None:
         #         results.append(result)
         # print("Done!")
-        print("Get oligo...")
-        results = []
-        for result in tqdm(pool.imap(write_oligos, fileNames), total=len(fileNames)):
-            if result is not None:
-                results.append(result)
-        print("Done!")
+        # print("Get oligo...")
+        # results = []
+        # for result in tqdm(pool.imap(write_oligos, fileNames), total=len(fileNames)):
+        #     if result is not None:
+        #         results.append(result)
+        # print("Done!")
 
+    get_ramifications()
