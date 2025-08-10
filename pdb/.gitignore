@@ -1,3 +1,4 @@
+*.csv
 bond_analysis.ipynb
 brayan.ipynb
 calc_energies.py
@@ -16,3 +17,5 @@ teste_pucker.py
 vini.ipynb
 methods_bar.png
 dinamicas/
+uniprot/
+procaff.ipynb
