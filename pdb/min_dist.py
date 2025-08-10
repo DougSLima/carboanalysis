@@ -37,7 +37,11 @@ def get_min_distance_mmcif(mmcif_file):
         print(f"Menor distância: {min_distance:.3f} Å")
         print(f"Entre os átomos: {closest_atoms[0]} e {closest_atoms[1]}")
         print(closest_atoms[0].get_parent())
+        print(closest_atoms[0].get_parent().get_resname())
+        print(closest_atoms[0].get_parent().get_id()[1])
         print(closest_atoms[1].get_parent())
+        print(closest_atoms[1].get_parent().get_resname())
+        print(closest_atoms[1].get_parent().get_id()[1])
     else:
         print("Nenhuma interação encontrada.")
 
